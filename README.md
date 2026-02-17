@@ -64,6 +64,18 @@ Depression is therefore:
 - Temporarily relieved by reading
 - Boosted downward by food consumption
 
+### Struggle Penalty (Aftershock System)
+
+Wildlife struggles apply a Depression penalty. You can choose how it is applied:
+
+- **Instant mode**: the full penalty is applied immediately.
+- **Aftershock mode**: the penalty is stored as a pool and applied gradually over time.
+
+In aftershock mode, the penalty is applied linearly over the configured duration (1–12 in-game hours).  
+While an aftershock is active, **passive depression recovery is disabled** so the penalty isn’t silently canceled out by baseline recovery.
+
+This makes attacks leave a meaningful psychological impact even if the player returns to safe / comfortable conditions afterwards.
+
 ### Eating Bonus Logic
 
 If the player eats long enough:
