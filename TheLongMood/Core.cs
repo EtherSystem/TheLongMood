@@ -10,7 +10,7 @@ using static Il2Cpp.SaveGameSlots;
 using System.Globalization;
 using System.Collections;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.0.0", "EtherSystem", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.1.0", "EtherSystem", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -19,42 +19,63 @@ namespace TheLongMood
     {
         private static readonly ModDataManager _manager = new("TheLongMood", false);
 
-        public static bool TryLoad(out float boredom, out float depression, out string? raw)
+        public static bool TryLoad(out float boredom, out float depression, out float pool, out float remainingHours, out string? raw)
         {
             boredom = 0f;
             depression = 0f;
+            pool = 0f;
+            remainingHours = 0f;
 
             raw = _manager.Load();
             if (raw == null) return false;
             if (raw.Length == 0) return true;
 
-            if (!TryParsePair(raw, out float b, out float d)) return true;
+            if (!TryParseFour(raw, out float b, out float d, out float p, out float t))
+                return true; // data invalide -> garde 0
 
             boredom = Mathf.Clamp(b, 0f, 100f);
             depression = Mathf.Clamp(d, 0f, 100f);
+
+            pool = Mathf.Max(0f, p);
+            remainingHours = Mathf.Max(0f, t);
+
             return true;
         }
 
-        public static void Save(float boredom, float depression)
+        public static void Save(float boredom, float depression, float pool, float remainingHours)
         {
             string combined =
-                boredom.ToString("0.###", CultureInfo.InvariantCulture) + "|" + depression.ToString("0.###", CultureInfo.InvariantCulture);
+                boredom.ToString("0.###", CultureInfo.InvariantCulture) + "|" +
+                depression.ToString("0.###", CultureInfo.InvariantCulture) + "|" +
+                pool.ToString("0.###", CultureInfo.InvariantCulture) + "|" +
+                remainingHours.ToString("0.###", CultureInfo.InvariantCulture);
 
             _manager.Save(combined);
         }
 
-        private static bool TryParsePair(string s, out float a, out float b)
+        private static bool TryParseFour(string s, out float a, out float b, out float c, out float d)
         {
-            a = 0f;
-            b = 0f;
+            a = b = c = d = 0f;
 
             ReadOnlySpan<char> span = s.AsSpan();
-            int sep = span.IndexOf('|');
-            if (sep <= 0 || sep >= span.Length - 1) return false;
 
-            if (!float.TryParse(span[..sep], NumberStyles.Float, CultureInfo.InvariantCulture, out a)) return false;
+            int p1 = span.IndexOf('|');
+            if (p1 <= 0) return false;
 
-            if (!float.TryParse(span[(sep + 1)..], NumberStyles.Float, CultureInfo.InvariantCulture, out b)) return false;
+            ReadOnlySpan<char> r1 = span[(p1 + 1)..];
+            int p2r = r1.IndexOf('|');
+            if (p2r <= 0) return false;
+            int p2 = p1 + 1 + p2r;
+
+            ReadOnlySpan<char> r2 = span[(p2 + 1)..];
+            int p3r = r2.IndexOf('|');
+            if (p3r <= 0) return false;
+            int p3 = p2 + 1 + p3r;
+
+            if (!float.TryParse(span[..p1], NumberStyles.Float, CultureInfo.InvariantCulture, out a)) return false;
+            if (!float.TryParse(span[(p1 + 1)..p2], NumberStyles.Float, CultureInfo.InvariantCulture, out b)) return false;
+            if (!float.TryParse(span[(p2 + 1)..p3], NumberStyles.Float, CultureInfo.InvariantCulture, out c)) return false;
+            if (!float.TryParse(span[(p3 + 1)..], NumberStyles.Float, CultureInfo.InvariantCulture, out d)) return false;
 
             return true;
         }
@@ -81,6 +102,13 @@ namespace TheLongMood
         private const float MIN_EATING_HOURS = 10f / 3600f;           // 10s in-game
         private const float EATING_BONUS_COOLDOWN_HOURS = 2f / 60f;   // 2min in-game
 
+        private bool _wasInStruggle = false;
+        private bool _instantPenaltyCached = false;
+        private float _attackAftershockPool = 0f;
+        private float _attackAftershockRemainingHours = 0f;
+        private float _hoursToApplyCached = -1f;
+        private const float MIN_HOURS_TO_APPLY = 0.01f;
+
         private float _idleGameHours = 0f;
         private float BOREDOM_DELAY_HOURS;
 
@@ -96,20 +124,23 @@ namespace TheLongMood
             Instance = this;
             LoggerInstance.Msg("is already bored...");
             Settings.OnLoad();
+
+            _instantPenaltyCached = Settings.options.InstantStrugglePenalty;
+            _hoursToApplyCached = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
             BOREDOM_DELAY_HOURS = Settings.options.TimeForBoredomIncrease / 60f;
 
             uConsole.RegisterCommand("reset_boredom", new Action(() =>
             {
                 boredom = 0f;
                 _dirty = true;
-                if (Settings.options.IsLogging) MelonLogger.Msg("[TheLongMood] Boredom reset to 0");
+                if (Settings.options.IsLogging) LoggerInstance.Msg("Boredom reset to 0");
             }));
 
             uConsole.RegisterCommand("reset_depression", new Action(() =>
             {
                 depression = 0f;
                 _dirty = true;
-                if (Settings.options.IsLogging) MelonLogger.Msg("[TheLongMood] Depression reset to 0");
+                if (Settings.options.IsLogging) LoggerInstance.Msg("Depression reset to 0");
             }));
 
             uConsole.RegisterCommand("set_boredom", new Action(() =>
@@ -160,7 +191,7 @@ namespace TheLongMood
                 if (GameManager.IsBootSceneActive() || GameManager.IsMainMenuActive() || GameManager.IsEmptySceneActive())
                     break;
 
-                if (Persistence.TryLoad(out float b, out float d, out string? raw))
+                if (Persistence.TryLoad(out float b, out float d, out float p, out float t, out string? raw))
                 {
                     if (raw != null)
                     {
@@ -168,14 +199,21 @@ namespace TheLongMood
                         {
                             boredom = b;
                             depression = d;
-                            if (Settings.options.IsLogging) LoggerInstance.Msg($"Loaded → Boredom: {boredom} | Depression: {depression}");
+                            _attackAftershockPool = p;
+                            _attackAftershockRemainingHours = t;
+                            bool wipedPool = false;
+                            if (Settings.options.InstantStrugglePenalty && (_attackAftershockPool > 0f || _attackAftershockRemainingHours > 0f))
+                            {
+                                _attackAftershockPool = 0f;
+                                _attackAftershockRemainingHours = 0f;
+                                wipedPool = true;
+                            }
+
+                            if (Settings.options.IsLogging) LoggerInstance.Msg($"Loaded → Boredom: {boredom} | Depression: {depression} | AftershockPool: {_attackAftershockPool} | AftershockRemainingHours: {_attackAftershockRemainingHours}");
+
+                            _dirty = wipedPool ? true : false;
+                            break;
                         }
-                        else
-                        {
-                            if (Settings.options.IsLogging) LoggerInstance.Msg($"Loaded → Boredom: {boredom} | Depression: {depression} (no data)");
-                        }
-                        _dirty = false;
-                        break;
                     }
                 }
                 yield return null;
@@ -187,8 +225,8 @@ namespace TheLongMood
         {
             if (!_dirty) return;
 
-            Persistence.Save(boredom, depression);
-            if (Settings.options.IsLogging) LoggerInstance.Msg($"Saved → {boredom:0.###}|{depression:0.###}");
+            Persistence.Save(boredom, depression, _attackAftershockPool, _attackAftershockRemainingHours);
+            if (Settings.options.IsLogging) LoggerInstance.Msg($"Saved → b{boredom:0.###}| d{depression:0.###}| p{_attackAftershockPool:0.###}| t{_attackAftershockRemainingHours:0.###}");
             _dirty = false;
         }
 
@@ -202,6 +240,11 @@ namespace TheLongMood
             _wasEating = false;
             _eatingAccumGameHours = 0f;
             _eatingBonusCooldownHours = 0f;
+            _wasInStruggle = false;
+            _attackAftershockPool = 0f;
+            _attackAftershockRemainingHours = 0f;
+            _instantPenaltyCached = Settings.options.InstantStrugglePenalty;
+            _hoursToApplyCached = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
 
             if (_loadRoutine != null)
             {
@@ -301,6 +344,89 @@ namespace TheLongMood
 
             if (player.PlayerIsSleeping()) return;
 
+            // wildlife attack logic
+            bool instant = Settings.options.InstantStrugglePenalty;
+
+            if (instant != _instantPenaltyCached)
+            {
+                _instantPenaltyCached = instant;
+
+                if (instant)
+                {
+                    _attackAftershockPool = 0f;
+                    _attackAftershockRemainingHours = 0f;
+                    _dirty = true;
+                }
+            }
+
+            float hoursToApply = 0f;
+            if (!instant)
+            {
+                hoursToApply = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
+
+                if (!Mathf.Approximately(hoursToApply, _hoursToApplyCached))
+                {
+                    _hoursToApplyCached = hoursToApply;
+                    if (_attackAftershockPool > 0f) _attackAftershockRemainingHours = hoursToApply;
+                }
+            }
+
+            var struggle = GameManager.GetPlayerStruggleComponent();
+            bool inStruggle = (struggle != null && struggle.InStruggle());
+
+            if (inStruggle && !_wasInStruggle)
+            {
+                float penalty;
+                string attacker;
+
+                if (struggle != null && struggle.InStruggleWIthBear())
+                {
+                    penalty = Settings.options.BearPenalty;
+                    attacker = "Bear";
+                }
+                else if (struggle != null && struggle.InStruggleWithMoose())
+                {
+                    penalty = Settings.options.MoosePenalty;
+                    attacker = "Moose";
+                }
+                else if (struggle != null && struggle.InStruggleWithCougar())
+                {
+                    penalty = Settings.options.CougarPenalty;
+                    attacker = "Cougar";
+                }
+                else if (struggle != null && struggle.InStruggleWIthWolf())
+                {
+                    penalty = Settings.options.WolfPenalty;
+                    attacker = "Wolf";
+                }
+                else
+                {
+                    penalty = Settings.options.WolfPenalty;
+                    attacker = "Struggle";
+                }
+
+                if (instant)
+                {
+                    float before = depression;
+                    depression = Mathf.Clamp(depression + penalty, 0f, 100f);
+                    _dirty = true;
+
+                    if (Settings.options.IsLogging) LoggerInstance.Msg($"{attacker} attack detected → Depression +{penalty:0.##} (instant) ({before:0.##} -> {depression:0.##})");
+                }
+                else
+                {
+                    _attackAftershockPool += penalty;
+                    _attackAftershockRemainingHours = hoursToApply;
+                    _dirty = true;
+
+                    if (Settings.options.IsLogging) LoggerInstance.Msg($"{attacker} attack detected → scheduled Depression +{penalty:0.##} over {hoursToApply:0.##}h");
+                }
+            }
+            _wasInStruggle = inStruggle;
+
+            bool aftershockActive = (!instant && _attackAftershockPool > 0f);
+            //----------------------------
+
             float distanceToFire = fireManager.GetDistanceToClosestFire(playerTransform.position);
             bool isNearFire = distanceToFire < 5f;
 
@@ -396,7 +522,7 @@ namespace TheLongMood
             }
             else
             {
-                depression -= (Settings.options.DropRate * 0.5f) * gameHoursPassed;
+                if (!aftershockActive) depression -= (Settings.options.DropRate * 0.5f) * gameHoursPassed;
             }
             if (hunger!= null && _wasEating && !isEating)
             {
@@ -409,6 +535,27 @@ namespace TheLongMood
             }
             _wasEating = isEating;
 
+            // apply attack aftershock over time (only if not instant)
+            if (!Settings.options.InstantStrugglePenalty && _attackAftershockPool > 0f)
+            {
+                if (_attackAftershockRemainingHours <= 0f)
+                    _attackAftershockRemainingHours = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
+
+                float h = Mathf.Min(gameHoursPassed, _attackAftershockRemainingHours);
+                float add = (_attackAftershockPool / _attackAftershockRemainingHours) * h;
+
+                depression += add;
+
+                _attackAftershockPool -= add;
+                _attackAftershockRemainingHours -= h;
+                _dirty = true;
+
+                if (_attackAftershockPool <= 0.0001f || _attackAftershockRemainingHours <= 0.0001f)
+                {
+                    _attackAftershockPool = 0f;
+                    _attackAftershockRemainingHours = 0f;
+                }
+            }
 
             boredom = Mathf.Clamp(boredom, 0f, 100f);
             depression = Mathf.Clamp(depression, 0f, 100f);

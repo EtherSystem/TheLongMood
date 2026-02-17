@@ -19,6 +19,37 @@
         [Slider(1f, 60f, 60, NumberFormat = "{0} MIN")]
         public int TimeForBoredomIncrease = 10;
 
+        [Section("Struggle Settings")]
+
+        [Name("Wolves")]
+        [Description("Depression penalty - default : 10")]
+        [Slider(1, 100, 100)]
+        public int WolfPenalty = 10;
+
+        [Name("Moose")]
+        [Description("Depression penalty - default : 30")]
+        [Slider(1, 100, 100)]
+        public int MoosePenalty = 30;
+
+        [Name("Bears")]
+        [Description("Depression penalty - default : 60")]
+        [Slider(1, 100, 100)]
+        public int BearPenalty = 60;
+
+        [Name("Cougars")]
+        [Description("Depression penalty - default : 40")]
+        [Slider(1, 100, 100)]
+        public int CougarPenalty = 40;
+
+        [Name("Instant penalty")]
+        [Description("If enabled, the depression penalty is applied instantly. If disabled, it is applied over time.")]
+        public bool InstantStrugglePenalty = true;
+
+        [Name("Time needed to apply the penalty")]
+        [Description("Default : 6")]
+        [Slider(1, 12, 12, NumberFormat = "{0} H")]
+        public int HoursToApply = 6;
+
         [Section("Advanced")]
 
         [Name("Show advanced options")]
@@ -30,7 +61,7 @@
         public bool Debug = false;
 
         [Name("ML Logging")]
-        [Description("Add logs for ModData/inactivity in the ML console.")]
+        [Description("Add logs for ModData/Boredom/Depression behavior in the ML console.")]
         public bool IsLogging = false;
 
         protected override void OnChange(FieldInfo field, object? oldValue, object? newValue)
@@ -47,6 +78,13 @@
                     Debug = false;
                     IsLogging = false;
                 }
+                return;
+            }
+
+            if (field.Name == nameof(InstantStrugglePenalty))
+            {
+                SetFieldVisible(nameof(HoursToApply), !InstantStrugglePenalty);
+                return;
             }
         }
 
@@ -57,6 +95,8 @@
                 Debug = false;
                 IsLogging = false;
             }
+
+            SetFieldVisible(nameof(HoursToApply), !InstantStrugglePenalty);
 
             base.OnConfirm();
         }
@@ -73,6 +113,7 @@
 
             options.SetFieldVisible(nameof(ModSettings.Debug), options.ShowAdvanced);
             options.SetFieldVisible(nameof(ModSettings.IsLogging), options.ShowAdvanced);
+            options.SetFieldVisible(nameof(ModSettings.HoursToApply), !options.InstantStrugglePenalty);
 
             if (!options.ShowAdvanced)
             {
