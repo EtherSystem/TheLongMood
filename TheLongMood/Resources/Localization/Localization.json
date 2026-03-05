@@ -1,0 +1,148 @@
+{
+    "GAMEPLAY_BoredName": {
+        "English": "Bored",
+        "French (France)": "Ennuyé",
+        "Spanish (Spain)": "Aburrida",
+        "German": "Gelangweilt",
+        "Turkish": "Sıkılmış",
+        "Russian": "Скучающий"
+    },
+    "GAMEPLAY_BoredDescription": {
+        "English": "Why does nothing interesting ever happen around here ?",
+        "French (France)": "Pourquoi rien d'intéressant ne se passe jamais par ici ?",
+        "Spanish (Spain)": "¿Por qué nunca pasa nada interesante por aquí ?",
+        "German": "Warum passiert hier nie etwas Interessantes ?",
+        "Turkish": "Burada neden hiç ilginç bir şey olmuyor ?",
+        "Russian": "Почему здесь никогда не происходит ничего интересного ?"
+    },
+
+
+    "GAMEPLAY_VeryBoredName": {
+        "English": "Very Bored",
+        "French (France)": "Très ennuyé",
+        "Spanish (Spain)": "Muy aburrida",
+        "German": "Sehr gelangweilt",
+        "Turkish": "Çok Sıkıldım",
+        "Russian": "Очень скучно"
+    },
+    "GAMEPLAY_VeryBoredDescription": {
+        "English": "Can barely take it anymore. Isn't there ANYTHING fun to do ?",
+        "French (France)": "Tu n'en peux plus. Il n'y a vraiment RIEN d'amusant à faire ?",
+        "Spanish (Spain)": "Ya casi no aguanto más. ¿No hay nada divertido que hacer ?",
+        "German": "Ich halte es kaum noch aus. Gibt es denn gar nichts mehr, was Spaß macht ?",
+        "Turkish": "Artık dayanamıyorum. Yapacak eğlenceli bir şey yok mu ?",
+        "Russian": "Я уже еле выдержала. Неужели нечем заняться ?"
+    },
+
+
+    "GAMEPLAY_ExBoredName": {
+        "English": "Extremely Bored",
+        "French (France)": "Extrêmement ennuyé",
+        "Spanish (Spain)": "Extremadamente aburrida",
+        "German": "Extrem gelangweilt",
+        "Turkish": "Aşırı Sıkıldım",
+        "Russian": "Ужасно скучно"
+    },
+    "GAMEPLAY_ExBoredDescription": {
+        "English": "They never said the end of the world would be like this...",
+        "French (France)": "Ils n'ont jamais dit que la fin du monde serait comme ça...",
+        "Spanish (Spain)": "Nunca dijeron que el fin del mundo sería así...",
+        "German": "Niemand hat gesagt, dass das Ende der Welt so aussehen würde...",
+        "Turkish": "Dünyanın sonunun böyle olacağını hiç söylemediler...",
+        "Russian": "Никто не говорил, что конец света будет именно таким..."
+    },
+
+
+    "GAMEPLAY_SadName": {
+        "English": "Sad",
+        "French (France)": "Triste",
+        "Spanish (Spain)": "Triste",
+        "German": "Traurig",
+        "Turkish": "Üzgünüm",
+        "Russian": "Грустно"
+    },
+    "GAMEPLAY_SadDescription": {
+        "English": "Having a hard time lately. Seek some way to forget your troubles.",
+        "French (France)": "Tu traverse une période difficile. Essaie de trouver un moyen d'oublier tes soucis.",
+        "Spanish (Spain)": "Lo estoy pasando mal últimamente. Busca una manera de olvidar tus problemas.",
+        "German": "Ich habe es in letzter Zeit schwer. Suche nach einer Möglichkeit, meine Sorgen zu vergessen.",
+        "Turkish": "Son zamanlarda zor zamanlar geçiriyorsunuz. Sorunlarınızı unutmanın bir yolunu bulun.",
+        "Russian": "В последнее время переживаю трудные времена. Найдите способ забыть о своих проблемах."
+    },
+
+
+    "GAMEPLAY_WeepyName": {
+        "English": "Weepy",
+        "French (France)": "Larmoyant",
+        "Spanish (Spain)": "Llorona",
+        "German": "Weinerlich",
+        "Turkish": "Ağlayan",
+        "Russian": "Плаксивый"
+    },
+    "GAMEPLAY_WeepyDescription": {
+        "English": "You always feel on the verge of tears. Nothing seems to go your way.",
+        "French (France)": "Tu as toujours l'impression d'être au bord des larmes. Rien ne semble aller dans ton sens.",
+        "Spanish (Spain)": "Siempre estás al borde de las lágrimas. Nada parece salirte bien.",
+        "German": "Du stehst ständig kurz vor den Tränen. Nichts scheint so zu laufen, wie du es dir wünschst.",
+        "Turkish": "Sürekli ağlamak üzereymiş gibi hissediyorsun. Hiçbir şey yolunda gitmiyor gibi.",
+        "Russian": "Ты постоянно чувствуешь, что вот-вот расплачешься. Кажется, ничего не получается."
+    },
+
+
+    "GAMEPLAY_MiserableName": {
+        "English": "Miserable",
+        "French (France)": "Misérable",
+        "Spanish (Spain)": "Miserable",
+        "German": "Miserabel",
+        "Turkish": "Acınası",
+        "Russian": "Убогий"
+    },
+    "GAMEPLAY_MiserableDescription": {
+        "English": "Ravaged by mourning and desperation. You're losing hope...",
+        "French (France)": "Ravagé par le deuil et le désespoir. Tu perds espoir...",
+        "Spanish (Spain)": "Devastado por el duelo y la desesperación. Estás perdiendo la esperanza...",
+        "German": "Von Trauer und Verzweiflung gezeichnet. Du verlierst die Hoffnung...",
+        "Turkish": "Yas ve umutsuzlukla harap olmuşsun. Umudunu kaybediyorsun...",
+        "Russian": "Измученный горем и отчаянием. Ты теряешь надежду..."
+    },
+
+
+    "GAMEPLAY_HopelessName": {
+        "English": "Hopeless",
+        "French (France)": "Sans espoir",
+        "Spanish (Spain)": "Desesperanzado",
+        "German": "Hoffnungslos",
+        "Turkish": "Umutsuz",
+        "Russian": "Безнадежно"
+    },
+    "GAMEPLAY_HopelessDescription": {
+        "English": "What's the point in going on ? Nothing good will ever happen...",
+        "French (France)": "À quoi bon continuer ? Rien de bon n'arrivera jamais...",
+        "Spanish (Spain)": "¿Qué sentido tiene seguir así? Nada bueno pasará jamás...",
+        "German": "Wozu soll das Ganze noch weitergehen? Es wird sowieso nichts Gutes dabei herauskommen...",
+        "Turkish": "Devam etmenin ne anlamı var? Hiçbir iyi şey olmayacak...",
+        "Russian": "Какой смысл продолжать? Ничего хорошего из этого не выйдет..."
+    },
+
+
+
+
+
+    "GAMEPLAY_BoredomCause": {
+        "English": "Lack of stimulation",
+        "French (France)": "Manque de stimulation",
+        "Spanish (Spain)": "Falta de estimulación",
+        "German": "Mangelnde Stimulation",
+        "Turkish": "Uyarı eksikliği",
+        "Russian": "Недостаток стимуляции"
+    },
+
+    "GAMEPLAY_DepressionCause": {
+        "English": "Prolonged psychological strain",
+        "French (France)": "Tension psychologique prolongée",
+        "Spanish (Spain)": "Tensión psicológica prolongada",
+        "German": "Anhaltende psychische Belastung",
+        "Turkish": "Uzun süreli psikolojik gerilim",
+        "Russian": "Длительное психологическое напряжение"
+    }
+}

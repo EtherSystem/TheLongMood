@@ -28,7 +28,7 @@ namespace TheLongMood.Afflictions.Depression
 
             public bool InstantHeal { get; set; } = true;
 
-            public HopelessAffliction(AfflictionBodyArea bodyArea) : base("Hopeless", "Prolonged psychological strain", "What's the point in going on ? Nothing good will ever happen...", null, "ico_injury_pain", bodyArea)
+            public HopelessAffliction(AfflictionBodyArea bodyArea) : base("GAMEPLAY_HopelessName", "GAMEPLAY_DepressionCause", "GAMEPLAY_HopelessDescription", null, "TheLongMood.Resources.Icons.Hopeless.png", bodyArea, true)
             {
             }
 

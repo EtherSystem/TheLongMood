@@ -5,21 +5,25 @@
         [Section("General Settings")]
 
         [Name("Rate")]
-        [Description("Default: 10 - Overall speed of Boredom & Depression changes (per in-game hour)")]
-        [Slider(5f, 15f, 3)]
-        public float DropRate = 10f;
+        [Description("Default: 10 - Overall speed of Boredom & Depression changes.")]
+        [Slider(5f, 15f, 3, NumberFormat = "{0} / hour")]
+        public int DropRate = 10;
 
         [Name("Recovery")]
-        [Description("Default: 10 - How fast Boredom decreases while you're active (per in-game hour)")]
-        [Slider(5f, 15f, 3)]
-        public float RegenRate = 10f;
+        [Description("Default: 10 - How fast Boredom decreases while you're active.")]
+        [Slider(5f, 15f, 3, NumberFormat = "{0} / hour")]
+        public int RegenRate = 10;
 
         [Name("Boredom Delay")]
-        [Description("Default: 10 - Time in minutes before Boredom starts increasing while inactive.")]
-        [Slider(1f, 60f, 60, NumberFormat = "{0} MIN")]
+        [Description("Default: 10 - Time before Boredom starts increasing while inactive.")]
+        [Slider(1, 60, 60, NumberFormat = "{0}min")]
         public int TimeForBoredomIncrease = 10;
 
         [Section("Struggle Settings")]
+
+        [Name("Attack aftershock")]
+        [Description("If disabled, all struggle-related features are disabled - enable by default.")]
+        public bool IsAttackAftershock = true;
 
         [Name("Wolves")]
         [Description("Depression penalty - default : 10")]
@@ -45,9 +49,9 @@
         [Description("If enabled, the depression penalty is applied instantly. If disabled, it is applied over time.")]
         public bool InstantStrugglePenalty = true;
 
-        [Name("Time needed to apply the penalty")]
+        [Name("Time needed to apply the penalty.")]
         [Description("Default : 6")]
-        [Slider(1, 12, 12, NumberFormat = "{0} H")]
+        [Slider(1, 12, 12, NumberFormat = "{0}h")]
         public int HoursToApply = 6;
 
         [Section("Advanced")]
@@ -81,9 +85,22 @@
                 return;
             }
 
+            if (field.Name == nameof(IsAttackAftershock))
+            {
+                bool show = IsAttackAftershock;
+
+                SetFieldVisible(nameof(WolfPenalty), show);
+                SetFieldVisible(nameof(MoosePenalty), show);
+                SetFieldVisible(nameof(BearPenalty), show);
+                SetFieldVisible(nameof(CougarPenalty), show);
+                SetFieldVisible(nameof(InstantStrugglePenalty), show);
+                SetFieldVisible(nameof(HoursToApply), show && !InstantStrugglePenalty);
+                return;
+            }
+
             if (field.Name == nameof(InstantStrugglePenalty))
             {
-                SetFieldVisible(nameof(HoursToApply), !InstantStrugglePenalty);
+                SetFieldVisible(nameof(HoursToApply), IsAttackAftershock && !InstantStrugglePenalty);
                 return;
             }
         }
@@ -96,7 +113,16 @@
                 IsLogging = false;
             }
 
-            SetFieldVisible(nameof(HoursToApply), !InstantStrugglePenalty);
+            SetFieldVisible(nameof(Debug), ShowAdvanced);
+            SetFieldVisible(nameof(IsLogging), ShowAdvanced);
+
+            bool show = IsAttackAftershock;
+            SetFieldVisible(nameof(WolfPenalty), show);
+            SetFieldVisible(nameof(MoosePenalty), show);
+            SetFieldVisible(nameof(BearPenalty), show);
+            SetFieldVisible(nameof(CougarPenalty), show);
+            SetFieldVisible(nameof(InstantStrugglePenalty), show);
+            SetFieldVisible(nameof(HoursToApply), show && !InstantStrugglePenalty);
 
             base.OnConfirm();
         }
@@ -113,13 +139,20 @@
 
             options.SetFieldVisible(nameof(ModSettings.Debug), options.ShowAdvanced);
             options.SetFieldVisible(nameof(ModSettings.IsLogging), options.ShowAdvanced);
-            options.SetFieldVisible(nameof(ModSettings.HoursToApply), !options.InstantStrugglePenalty);
 
             if (!options.ShowAdvanced)
             {
                 options.Debug = false;
                 options.IsLogging = false;
             }
+
+            bool show = options.IsAttackAftershock;
+            options.SetFieldVisible(nameof(ModSettings.WolfPenalty), show);
+            options.SetFieldVisible(nameof(ModSettings.MoosePenalty), show);
+            options.SetFieldVisible(nameof(ModSettings.BearPenalty), show);
+            options.SetFieldVisible(nameof(ModSettings.CougarPenalty), show);
+            options.SetFieldVisible(nameof(ModSettings.InstantStrugglePenalty), show);
+            options.SetFieldVisible(nameof(ModSettings.HoursToApply), show && !options.InstantStrugglePenalty);
         }
     }
 }

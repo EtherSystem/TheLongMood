@@ -28,7 +28,7 @@ namespace TheLongMood.Afflictions.Depression
 
             public bool InstantHeal { get; set; } = true;
 
-            public SadAffliction(AfflictionBodyArea bodyArea) : base("Sad", "Prolonged psychological strain", "Having a hard time lately. Seek some way to forget your troubles.", null, "ico_injury_pain", bodyArea)
+            public SadAffliction(AfflictionBodyArea bodyArea) : base("GAMEPLAY_SadName", "GAMEPLAY_DepressionCause", "GAMEPLAY_SadDescription", null, "TheLongMood.Resources.Icons.Sad.png", bodyArea, true)
             {
             }
 

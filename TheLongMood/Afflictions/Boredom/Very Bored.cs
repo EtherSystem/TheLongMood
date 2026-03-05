@@ -28,7 +28,7 @@ namespace TheLongMood.Afflictions.Boredom
 
             public bool InstantHeal { get; set; } = true;
 
-            public VeryBoredAffliction(AfflictionBodyArea bodyArea) : base("Very Bored", "Lack of stimulation", "Can barely take it anymore. Isn't there ANYTHING fun to do ?", null, "ico_injury_pain", bodyArea)
+            public VeryBoredAffliction(AfflictionBodyArea bodyArea) : base("GAMEPLAY_VeryBoredName", "GAMEPLAY_BoredomCause", "GAMEPLAY_VeryBoredDescription", null, "TheLongMood.Resources.Icons.VeryBored.png", bodyArea, true)
             {
             }
 

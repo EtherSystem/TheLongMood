@@ -65,24 +65,24 @@
                     UILabel tempLabel = tempObject.GetComponent<UILabel>();
                     if (tempLabel != null && GameManager.GetFreezingComponent() != null)
                     {
-                        if (Core.boredom >= 90)
+                        if (Core.State.Boredom >= 90)
                         {
-                            tempLabel.text = $"b{Core.boredom:F0}%  d{Core.depression:F0}%";
+                            tempLabel.text = $"b{Core.State.Boredom:F0}%  d{Core.State.Depression:F0}%";
                             tempLabel.color = new Color(0.8f, 0.2f, 0.23f, 1.000f); //darkred
                         }
-                        else if (Core.boredom >= 75)
+                        else if (Core.State.Boredom >= 75)
                         {
-                            tempLabel.text = $"b{Core.boredom:F0}%  d{Core.depression:F0}%";
+                            tempLabel.text = $"b{Core.State.Boredom:F0}%  d{Core.State.Depression:F0}%";
                             tempLabel.color = new Color(1f, 0.5f, 0f); //orange
                         }
-                        else if (Core.boredom >= 50)
+                        else if (Core.State.Boredom >= 50)
                         {
-                            tempLabel.text = $"b{Core.boredom:F0}%  d{Core.depression:F0}%";
+                            tempLabel.text = $"b{Core.State.Boredom:F0}%  d{Core.State.Depression:F0}%";
                             tempLabel.color = new Color(1f, 0.85f, 0.2f); //yellow
                         }
-                        else if (Core.boredom < 50)
+                        else if (Core.State.Boredom < 50)
                         {
-                            tempLabel.text = $"b{Core.boredom:F0}%  d{Core.depression:F0}%";
+                            tempLabel.text = $"b{Core.State.Boredom:F0}%  d{Core.State.Depression:F0}%";
                             tempLabel.color = new Color(0.9f, 0.95f, 1f); //white
                         }
                             elapsedMinutes = GameManager.GetHighResolutionTimerManager().GetElapsedMinutes();

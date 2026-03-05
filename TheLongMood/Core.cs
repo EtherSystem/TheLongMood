@@ -6,87 +6,31 @@ using static TheLongMood.Afflictions.Depression.Weepy;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Boredom.Bored;
 using AfflictionComponent.Components;
-using static Il2Cpp.SaveGameSlots;
-using System.Globalization;
-using System.Collections;
+using TheLongMood.Persistence;
+using LocalizationUtilities;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.1.0", "EtherSystem", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.2.0", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
 {
-    internal static class Persistence
-    {
-        private static readonly ModDataManager _manager = new("TheLongMood", false);
-
-        public static bool TryLoad(out float boredom, out float depression, out float pool, out float remainingHours, out string? raw)
-        {
-            boredom = 0f;
-            depression = 0f;
-            pool = 0f;
-            remainingHours = 0f;
-
-            raw = _manager.Load();
-            if (raw == null) return false;
-            if (raw.Length == 0) return true;
-
-            if (!TryParseFour(raw, out float b, out float d, out float p, out float t))
-                return true; // data invalide -> garde 0
-
-            boredom = Mathf.Clamp(b, 0f, 100f);
-            depression = Mathf.Clamp(d, 0f, 100f);
-
-            pool = Mathf.Max(0f, p);
-            remainingHours = Mathf.Max(0f, t);
-
-            return true;
-        }
-
-        public static void Save(float boredom, float depression, float pool, float remainingHours)
-        {
-            string combined =
-                boredom.ToString("0.###", CultureInfo.InvariantCulture) + "|" +
-                depression.ToString("0.###", CultureInfo.InvariantCulture) + "|" +
-                pool.ToString("0.###", CultureInfo.InvariantCulture) + "|" +
-                remainingHours.ToString("0.###", CultureInfo.InvariantCulture);
-
-            _manager.Save(combined);
-        }
-
-        private static bool TryParseFour(string s, out float a, out float b, out float c, out float d)
-        {
-            a = b = c = d = 0f;
-
-            ReadOnlySpan<char> span = s.AsSpan();
-
-            int p1 = span.IndexOf('|');
-            if (p1 <= 0) return false;
-
-            ReadOnlySpan<char> r1 = span[(p1 + 1)..];
-            int p2r = r1.IndexOf('|');
-            if (p2r <= 0) return false;
-            int p2 = p1 + 1 + p2r;
-
-            ReadOnlySpan<char> r2 = span[(p2 + 1)..];
-            int p3r = r2.IndexOf('|');
-            if (p3r <= 0) return false;
-            int p3 = p2 + 1 + p3r;
-
-            if (!float.TryParse(span[..p1], NumberStyles.Float, CultureInfo.InvariantCulture, out a)) return false;
-            if (!float.TryParse(span[(p1 + 1)..p2], NumberStyles.Float, CultureInfo.InvariantCulture, out b)) return false;
-            if (!float.TryParse(span[(p2 + 1)..p3], NumberStyles.Float, CultureInfo.InvariantCulture, out c)) return false;
-            if (!float.TryParse(span[(p3 + 1)..], NumberStyles.Float, CultureInfo.InvariantCulture, out d)) return false;
-
-            return true;
-        }
-    }
-
     public class Core : MelonMod
     {
-        public static Core? Instance { get; private set; }
+        public static string? LoadEmbeddedJSON(string Localization)
+        {
+            string? result = null;
 
-        public static float boredom = 0f;
-        public static float depression = 0f;
+            Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TheLongMood.Resources.Localization.Localization.json");
+            if (stream != null)
+            {
+                StreamReader reader = new StreamReader(stream);
+                result = reader.ReadToEnd();
+            }
+            return result;
+        }
+
+        public static Core? Instance { get; private set; }
+        internal static MoodState State = new();
 
         private int _currentBoredomTier = 0;
         private int _currentDepressionTier = 0;
@@ -104,23 +48,19 @@ namespace TheLongMood
 
         private bool _wasInStruggle = false;
         private bool _instantPenaltyCached = false;
-        private float _attackAftershockPool = 0f;
-        private float _attackAftershockRemainingHours = 0f;
         private float _hoursToApplyCached = -1f;
         private const float MIN_HOURS_TO_APPLY = 0.01f;
 
         private float _idleGameHours = 0f;
         private float BOREDOM_DELAY_HOURS;
 
-        internal bool pendingLoad = false;
-
-        private object? _loadRoutine;
         private bool _dirty = false;
 
         private bool _wasBoredomBlocked = true;
 
         public override void OnInitializeMelon()
         {
+            LocalizationManager.LoadJsonLocalization(LoadEmbeddedJSON("Localization.json"));
             Instance = this;
             LoggerInstance.Msg("is already bored...");
             Settings.OnLoad();
@@ -131,14 +71,14 @@ namespace TheLongMood
 
             uConsole.RegisterCommand("reset_boredom", new Action(() =>
             {
-                boredom = 0f;
+                Core.State.Boredom = 0f;
                 _dirty = true;
                 if (Settings.options.IsLogging) LoggerInstance.Msg("Boredom reset to 0");
             }));
 
             uConsole.RegisterCommand("reset_depression", new Action(() =>
             {
-                depression = 0f;
+                Core.State.Depression = 0f;
                 _dirty = true;
                 if (Settings.options.IsLogging) LoggerInstance.Msg("Depression reset to 0");
             }));
@@ -158,9 +98,9 @@ namespace TheLongMood
                     return;
                 }
 
-                boredom = Mathf.Clamp(v, 0, 100);
+                Core.State.Boredom = Mathf.Clamp(v, 0, 100);
                 _dirty = true;
-                uConsole.Log($"Boredom set to {boredom:0}");
+                uConsole.Log($"Boredom set to {Core.State.Boredom:0}");
             }));
 
             uConsole.RegisterCommand("set_depression", new Action(() =>
@@ -178,93 +118,80 @@ namespace TheLongMood
                     return;
                 }
 
-                depression = Mathf.Clamp(v, 0, 100);
+                Core.State.Depression = Mathf.Clamp(v, 0, 100);
                 _dirty = true;
-                uConsole.Log($"Depression set to {depression:0}");
+                uConsole.Log($"Depression set to {Core.State.Depression:0}");
             }));
         }
-        private IEnumerator LoadRoutine()
+
+        public void ResetRuntime()
         {
-            const int maxFrames = 120;
-            for (int i = 0; i < maxFrames; i++)
-            {
-                if (GameManager.IsBootSceneActive() || GameManager.IsMainMenuActive() || GameManager.IsEmptySceneActive())
-                    break;
-
-                if (Persistence.TryLoad(out float b, out float d, out float p, out float t, out string? raw))
-                {
-                    if (raw != null)
-                    {
-                        if (!string.IsNullOrEmpty(raw))
-                        {
-                            boredom = b;
-                            depression = d;
-                            _attackAftershockPool = p;
-                            _attackAftershockRemainingHours = t;
-                            bool wipedPool = false;
-                            if (Settings.options.InstantStrugglePenalty && (_attackAftershockPool > 0f || _attackAftershockRemainingHours > 0f))
-                            {
-                                _attackAftershockPool = 0f;
-                                _attackAftershockRemainingHours = 0f;
-                                wipedPool = true;
-                            }
-
-                            if (Settings.options.IsLogging) LoggerInstance.Msg($"Loaded → Boredom: {boredom} | Depression: {depression} | AftershockPool: {_attackAftershockPool} | AftershockRemainingHours: {_attackAftershockRemainingHours}");
-
-                            _dirty = wipedPool ? true : false;
-                            break;
-                        }
-                    }
-                }
-                yield return null;
-            }
-            _loadRoutine = null;
-        }
-
-        public void SaveToModData()
-        {
-            if (!_dirty) return;
-
-            Persistence.Save(boredom, depression, _attackAftershockPool, _attackAftershockRemainingHours);
-            if (Settings.options.IsLogging) LoggerInstance.Msg($"Saved → b{boredom:0.###}| d{depression:0.###}| p{_attackAftershockPool:0.###}| t{_attackAftershockRemainingHours:0.###}");
             _dirty = false;
-        }
 
-        public void ResetSlotState()
-        {
-            boredom = 0f;
-            depression = 0f;
-            pendingLoad = false;
-            _dirty = false;
-            _wasEating = false;
             _wasEating = false;
             _eatingAccumGameHours = 0f;
             _eatingBonusCooldownHours = 0f;
-            _wasInStruggle = false;
-            _attackAftershockPool = 0f;
-            _attackAftershockRemainingHours = 0f;
-            _instantPenaltyCached = Settings.options.InstantStrugglePenalty;
-            _hoursToApplyCached = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
 
-            if (_loadRoutine != null)
-            {
-                MelonCoroutines.Stop(_loadRoutine);
-                _loadRoutine = null;
-            }
+            _wasInStruggle = false;
 
             _idleGameHours = 0f;
             _realAccum = 0f;
+
             _currentBoredomTier = 0;
             _currentDepressionTier = 0;
+
             _wasBoredomBlocked = true;
+
+            _instantPenaltyCached = Settings.options.InstantStrugglePenalty;
+            _hoursToApplyCached = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
+        }
+
+        public void OnStateLoaded()
+        {
+            Core.State.Boredom = Mathf.Clamp(Core.State.Boredom, 0f, 100f);
+            Core.State.Depression = Mathf.Clamp(Core.State.Depression, 0f, 100f);
+            Core.State.AftershockPool = Mathf.Max(0f, Core.State.AftershockPool);
+            Core.State.AftershockRemainingHours = Mathf.Max(0f, Core.State.AftershockRemainingHours);
+
+            if (!Settings.options.IsAttackAftershock)
+            {
+                if (Core.State.AftershockPool > 0f || Core.State.AftershockRemainingHours > 0f)
+                {
+                    Core.State.AftershockPool = 0f;
+                    Core.State.AftershockRemainingHours = 0f;
+                    _dirty = true;
+                }
+            }
+            else if (Settings.options.InstantStrugglePenalty && (Core.State.AftershockPool > 0f || Core.State.AftershockRemainingHours > 0f))
+            {
+                Core.State.AftershockPool = 0f;
+                Core.State.AftershockRemainingHours = 0f;
+                _dirty = true;
+            }
+            _currentBoredomTier = -1;
+            _currentDepressionTier = -1;
+        }
+
+        public void ResetAll()
+        {
+            Core.State = new MoodState();
+            ResetRuntime();
+        }
+
+        public void SaveIfDirty()
+        {
+            if (!_dirty) return;
+
+            SaveDataManager.OnSave();
+            _dirty = false;
         }
 
         private void EnsureSingleBoredomTier()
         {
             int newTier = 0;
-            if (boredom >= 90f) newTier = 3;
-            else if (boredom >= 75f) newTier = 2;
-            else if (boredom >= 50f) newTier = 1;
+            if (Core.State.Boredom >= 90f) newTier = 3;
+            else if (Core.State.Boredom >= 75f) newTier = 2;
+            else if (Core.State.Boredom >= 50f) newTier = 1;
 
             if (newTier == _currentBoredomTier) return;
             _currentBoredomTier = newTier;
@@ -287,10 +214,10 @@ namespace TheLongMood
         private void EnsureSingleDepressionTier()
         {
             int newTier = 0;
-            if (depression >= 80f) newTier = 4;
-            else if (depression >= 60f) newTier = 3;
-            else if (depression >= 45f) newTier = 2;
-            else if (depression >= 20f) newTier = 1;
+            if (Core.State.Depression >= 80f) newTier = 4;
+            else if (Core.State.Depression >= 60f) newTier = 3;
+            else if (Core.State.Depression >= 45f) newTier = 2;
+            else if (Core.State.Depression >= 20f) newTier = 1;
 
             if (newTier == _currentDepressionTier) return;
             _currentDepressionTier = newTier;
@@ -315,12 +242,6 @@ namespace TheLongMood
             if (GameManager.m_Instance == null || GameManager.m_IsPaused) return;
             if (GameManager.IsBootSceneActive() || GameManager.IsMainMenuActive() || GameManager.IsEmptySceneActive()) return;
 
-            if (pendingLoad)
-            {
-                pendingLoad = false;
-                _loadRoutine ??= MelonCoroutines.Start(LoadRoutine());
-            }
-
             var player = GameManager.GetPlayerManagerComponent();
             if (player == null) return;
 
@@ -344,87 +265,108 @@ namespace TheLongMood
 
             if (player.PlayerIsSleeping()) return;
 
-            // wildlife attack logic
-            bool instant = Settings.options.InstantStrugglePenalty;
-
-            if (instant != _instantPenaltyCached)
-            {
-                _instantPenaltyCached = instant;
-
-                if (instant)
-                {
-                    _attackAftershockPool = 0f;
-                    _attackAftershockRemainingHours = 0f;
-                    _dirty = true;
-                }
-            }
-
-            float hoursToApply = 0f;
-            if (!instant)
-            {
-                hoursToApply = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
-
-                if (!Mathf.Approximately(hoursToApply, _hoursToApplyCached))
-                {
-                    _hoursToApplyCached = hoursToApply;
-                    if (_attackAftershockPool > 0f) _attackAftershockRemainingHours = hoursToApply;
-                }
-            }
+            // ----------------wildlife attack logic-------------------
+            bool aftershockActive = false;
 
             var struggle = GameManager.GetPlayerStruggleComponent();
             bool inStruggle = (struggle != null && struggle.InStruggle());
 
-            if (inStruggle && !_wasInStruggle)
+            if (!Settings.options.IsAttackAftershock)
             {
-                float penalty;
-                string attacker;
-
-                if (struggle != null && struggle.InStruggleWIthBear())
+                if (Core.State.AftershockPool > 0f || Core.State.AftershockRemainingHours > 0f)
                 {
-                    penalty = Settings.options.BearPenalty;
-                    attacker = "Bear";
-                }
-                else if (struggle != null && struggle.InStruggleWithMoose())
-                {
-                    penalty = Settings.options.MoosePenalty;
-                    attacker = "Moose";
-                }
-                else if (struggle != null && struggle.InStruggleWithCougar())
-                {
-                    penalty = Settings.options.CougarPenalty;
-                    attacker = "Cougar";
-                }
-                else if (struggle != null && struggle.InStruggleWIthWolf())
-                {
-                    penalty = Settings.options.WolfPenalty;
-                    attacker = "Wolf";
-                }
-                else
-                {
-                    penalty = Settings.options.WolfPenalty;
-                    attacker = "Struggle";
-                }
-
-                if (instant)
-                {
-                    float before = depression;
-                    depression = Mathf.Clamp(depression + penalty, 0f, 100f);
+                    Core.State.AftershockPool = 0f;
+                    Core.State.AftershockRemainingHours = 0f;
                     _dirty = true;
 
-                    if (Settings.options.IsLogging) LoggerInstance.Msg($"{attacker} attack detected → Depression +{penalty:0.##} (instant) ({before:0.##} -> {depression:0.##})");
+                    if (Settings.options.IsLogging) LoggerInstance.Msg("Attack aftershock disabled → cleared pending aftershock state");
                 }
-                else
-                {
-                    _attackAftershockPool += penalty;
-                    _attackAftershockRemainingHours = hoursToApply;
-                    _dirty = true;
 
-                    if (Settings.options.IsLogging) LoggerInstance.Msg($"{attacker} attack detected → scheduled Depression +{penalty:0.##} over {hoursToApply:0.##}h");
-                }
+                _wasInStruggle = inStruggle;
             }
-            _wasInStruggle = inStruggle;
+            else
+            {
+                bool instant = Settings.options.InstantStrugglePenalty;
 
-            bool aftershockActive = (!instant && _attackAftershockPool > 0f);
+                if (instant != _instantPenaltyCached)
+                {
+                    _instantPenaltyCached = instant;
+
+                    if (instant)
+                    {
+                        if (Core.State.AftershockPool > 0f || Core.State.AftershockRemainingHours > 0f)
+                        {
+                            Core.State.AftershockPool = 0f;
+                            Core.State.AftershockRemainingHours = 0f;
+                            _dirty = true;
+                        }
+                    }
+                }
+
+                float hoursToApply = 0f;
+                if (!instant)
+                {
+                    hoursToApply = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
+
+                    if (!Mathf.Approximately(hoursToApply, _hoursToApplyCached))
+                    {
+                        _hoursToApplyCached = hoursToApply;
+                        if (Core.State.AftershockPool > 0f) Core.State.AftershockRemainingHours = hoursToApply;
+                    }
+                }
+
+                if (inStruggle && !_wasInStruggle)
+                {
+                    float penalty;
+                    string attacker;
+
+                    if (struggle != null && struggle.InStruggleWIthBear())
+                    {
+                        penalty = Settings.options.BearPenalty;
+                        attacker = "Bear";
+                    }
+                    else if (struggle != null && struggle.InStruggleWithMoose())
+                    {
+                        penalty = Settings.options.MoosePenalty;
+                        attacker = "Moose";
+                    }
+                    else if (struggle != null && struggle.InStruggleWithCougar())
+                    {
+                        penalty = Settings.options.CougarPenalty;
+                        attacker = "Cougar";
+                    }
+                    else if (struggle != null && struggle.InStruggleWIthWolf())
+                    {
+                        penalty = Settings.options.WolfPenalty;
+                        attacker = "Wolf";
+                    }
+                    else
+                    {
+                        penalty = Settings.options.WolfPenalty;
+                        attacker = "Struggle";
+                    }
+
+                    if (instant)
+                    {
+                        float before = Core.State.Depression;
+                        Core.State.Depression = Mathf.Clamp(Core.State.Depression + penalty, 0f, 100f);
+                        _dirty = true;
+
+                        if (Settings.options.IsLogging) LoggerInstance.Msg($"{attacker} attack detected → Depression +{penalty:0.##} (instant) ({before:0.##} -> {Core.State.Depression:0.##})");
+                    }
+                    else
+                    {
+                        Core.State.AftershockPool += penalty;
+                        Core.State.AftershockRemainingHours = hoursToApply;
+                        _dirty = true;
+
+                        if (Settings.options.IsLogging) LoggerInstance.Msg($"{attacker} attack detected → scheduled Depression +{penalty:0.##} over {hoursToApply:0.##}h");
+                    }
+                }
+
+                _wasInStruggle = inStruggle;
+                aftershockActive = (!instant && Core.State.AftershockPool > 0f);
+            }
             //----------------------------
 
             float distanceToFire = fireManager.GetDistanceToClosestFire(playerTransform.position);
@@ -477,13 +419,13 @@ namespace TheLongMood
 
             bool boredomBlocked = isActivity || holdsLightSource || isNearFire;
 
-            float oldB = boredom;
-            float oldD = depression;
+            float oldB = Core.State.Boredom;
+            float oldD = Core.State.Depression;
 
             if (boredomBlocked)
             {
                 _idleGameHours = 0f;
-                boredom -= Settings.options.RegenRate * gameHoursPassed;
+                Core.State.Boredom -= Settings.options.RegenRate * gameHoursPassed;
             }
             else
             {
@@ -491,7 +433,7 @@ namespace TheLongMood
 
                 if (_idleGameHours >= BOREDOM_DELAY_HOURS)
                 {
-                    boredom += Settings.options.DropRate * gameHoursPassed;
+                    Core.State.Boredom += Settings.options.DropRate * gameHoursPassed;
 
                     if (_wasBoredomBlocked)
                         if (Settings.options.IsLogging) LoggerInstance.Msg("Inactivity detected");
@@ -502,98 +444,69 @@ namespace TheLongMood
 
             if (hasAffliction)
             {
-                depression += (Settings.options.DropRate * 2f) * gameHoursPassed;
+                Core.State.Depression += (Settings.options.DropRate * 2f) * gameHoursPassed;
             }
             else if (isReading)
             {
-                depression -= (Settings.options.DropRate * 1f) * gameHoursPassed;
+                Core.State.Depression -= (Settings.options.DropRate * 1f) * gameHoursPassed;
             }
-            else if (boredom >= 90f)
+            else if (Core.State.Boredom >= 90f)
             {
-                depression += (Settings.options.DropRate * 2.96f) * gameHoursPassed;
+                Core.State.Depression += (Settings.options.DropRate * 2.96f) * gameHoursPassed;
             }
-            else if (boredom >= 75f)
+            else if (Core.State.Boredom >= 75f)
             {
-                depression += (Settings.options.DropRate * 2.22f) * gameHoursPassed;
+                Core.State.Depression += (Settings.options.DropRate * 2.22f) * gameHoursPassed;
             }
-            else if (boredom >= 50f)
+            else if (Core.State.Boredom >= 50f)
             {
-                depression += (Settings.options.DropRate * 1.48f) * gameHoursPassed;
+                Core.State.Depression += (Settings.options.DropRate * 1.48f) * gameHoursPassed;
             }
             else
             {
-                if (!aftershockActive) depression -= (Settings.options.DropRate * 0.5f) * gameHoursPassed;
+                if (!aftershockActive) Core.State.Depression -= (Settings.options.DropRate * 0.5f) * gameHoursPassed;
             }
             if (hunger!= null && _wasEating && !isEating)
             {
                 if (_eatingBonusCooldownHours <= 0f && _eatingAccumGameHours >= MIN_EATING_HOURS)
                 {
-                    depression -= EATING_DEPRESSION_BONUS;
+                    Core.State.Depression -= EATING_DEPRESSION_BONUS;
                     _eatingBonusCooldownHours = EATING_BONUS_COOLDOWN_HOURS;
+                    _dirty = true;
                 }
                 _eatingAccumGameHours = 0f;
             }
             _wasEating = isEating;
 
             // apply attack aftershock over time (only if not instant)
-            if (!Settings.options.InstantStrugglePenalty && _attackAftershockPool > 0f)
+            if (Settings.options.IsAttackAftershock && !Settings.options.InstantStrugglePenalty && Core.State.AftershockPool > 0f)
             {
-                if (_attackAftershockRemainingHours <= 0f)
-                    _attackAftershockRemainingHours = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
+                if (Core.State.AftershockRemainingHours <= 0f) Core.State.AftershockRemainingHours = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
 
-                float h = Mathf.Min(gameHoursPassed, _attackAftershockRemainingHours);
-                float add = (_attackAftershockPool / _attackAftershockRemainingHours) * h;
+                float h = Mathf.Min(gameHoursPassed, Core.State.AftershockRemainingHours);
+                float add = (Core.State.AftershockPool / Core.State.AftershockRemainingHours) * h;
 
-                depression += add;
+                Core.State.Depression += add;
 
-                _attackAftershockPool -= add;
-                _attackAftershockRemainingHours -= h;
+                Core.State.AftershockPool -= add;
+                Core.State.AftershockRemainingHours -= h;
                 _dirty = true;
 
-                if (_attackAftershockPool <= 0.0001f || _attackAftershockRemainingHours <= 0.0001f)
+                if (Core.State.AftershockPool <= 0.0001f || Core.State.AftershockRemainingHours <= 0.0001f)
                 {
-                    _attackAftershockPool = 0f;
-                    _attackAftershockRemainingHours = 0f;
+                    Core.State.AftershockPool = 0f;
+                    Core.State.AftershockRemainingHours = 0f;
                 }
             }
 
-            boredom = Mathf.Clamp(boredom, 0f, 100f);
-            depression = Mathf.Clamp(depression, 0f, 100f);
+            Core.State.Boredom = Mathf.Clamp(Core.State.Boredom, 0f, 100f);
+            Core.State.Depression = Mathf.Clamp(Core.State.Depression, 0f, 100f);
 
-            if (!Mathf.Approximately(oldB, boredom) || !Mathf.Approximately(oldD, depression))
+            if (!Mathf.Approximately(oldB, Core.State.Boredom) || !Mathf.Approximately(oldD, Core.State.Depression))
                 _dirty = true;
 
             EnsureSingleBoredomTier();
             EnsureSingleDepressionTier();
-        }
-    }
-
-    // save patches
-    [HarmonyPatch(typeof(SaveGameSlots), nameof(SaveGameSlots.WriteSlotToDisk), [typeof(SlotData), typeof(Timestamp)])]
-    internal class TheLongMood_SavePatch
-    {
-        private static void Prefix()
-        {
-            Core.Instance?.SaveToModData();
-        }
-    }
-
-    [HarmonyPatch(typeof(GameManager), nameof(GameManager.LoadSaveGameSlot), [typeof(string), typeof(int)])]
-    internal class TheLongMood_LoadPatch
-    {
-        private static void Postfix()
-        {
-            if (Core.Instance != null)
-                Core.Instance.pendingLoad = true;
-        }
-    }
-
-    [HarmonyPatch(typeof(GameManager), nameof(GameManager.DoExitToMainMenu))]
-    internal class TheLongMood_MainMenuPatch
-    {
-        private static void Postfix()
-        {
-            Core.Instance?.ResetSlotState();
         }
     }
 }

@@ -28,7 +28,7 @@ namespace TheLongMood.Afflictions.Depression
 
             public bool InstantHeal { get; set; } = true;
 
-            public MiserableAffliction(AfflictionBodyArea bodyArea) : base("Miserable", "Prolonged psychological strain", "Ravaged by mourning and desperation. You're losing hope...", null, "ico_injury_pain", bodyArea)
+            public MiserableAffliction(AfflictionBodyArea bodyArea) : base("GAMEPLAY_MiserableName", "GAMEPLAY_DepressionCause", "GAMEPLAY_MiserableDescription", null, "TheLongMood.Resources.Icons.Miserable.png", bodyArea, true)
             {
             }
 

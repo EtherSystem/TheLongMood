@@ -28,7 +28,7 @@ namespace TheLongMood.Afflictions.Depression
 
             public bool InstantHeal { get; set; } = true;
 
-            public WeepyAffliction(AfflictionBodyArea bodyArea) : base("Weepy", "Prolonged psychological strain", "You always feel on the verge of tears. Nothing seems to go your way.", null, "ico_injury_pain", bodyArea)
+            public WeepyAffliction(AfflictionBodyArea bodyArea) : base("GAMEPLAY_WeepyName", "GAMEPLAY_DepressionCause", "GAMEPLAY_WeepyDescription", null, "TheLongMood.Resources.Icons.Weepy.png", bodyArea, true)
             {
             }
 

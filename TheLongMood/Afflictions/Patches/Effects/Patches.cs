@@ -4,7 +4,7 @@ using static TheLongMood.Afflictions.Depression.Weepy;
 using static TheLongMood.Afflictions.Depression.Sad;
 using AfflictionComponent.Components;
 
-namespace TheLongMood.Afflictions.Patches.AfflictionsEffects
+namespace TheLongMood.Afflictions.Patches.Effects
 {
     internal class Patches
     {

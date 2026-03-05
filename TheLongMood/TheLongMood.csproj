@@ -14,14 +14,24 @@
 		<TheLongDarkPath>D:\SteamLibrary\steamapps\common\TheLongDark</TheLongDarkPath>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <None Remove="Resources\Icons\Bored.png" />
+	  <None Remove="Resources\Icons\ExtremelyBored.png" />
+	  <None Remove="Resources\Icons\Hopeless.png" />
+	  <None Remove="Resources\Icons\Miserable.png" />
+	  <None Remove="Resources\Icons\Sad.png" />
+	  <None Remove="Resources\Icons\VeryBored.png" />
+	  <None Remove="Resources\Icons\VveryBored.png" />
+	  <None Remove="Resources\Icons\Weepy.png" />
+	  <None Remove="Resources\Localization\Localization.json" />
+	</ItemGroup>
+
 	<!-- List of used references -->
 	<ItemGroup>
 		<!-- This is the base reference. MUST EXIST -->
 		<PackageReference Include="STBlade.Modding.TLD.CraftingRevisions" Version="2.2.3" />
 		<PackageReference Include="STBlade.Modding.TLD.GearSpawner" Version="2.3.1" />
 		<PackageReference Include="STBlade.Modding.TLD.Il2CppAssemblies.Windows" Version="2.51.0" />
-		<PackageReference Include="STBlade.Modding.TLD.LocalizationUtilities" Version="2.0.0" />
-		<PackageReference Include="STBlade.Modding.TLD.ModComponent" Version="6.2.3" />
 		<!-- This is only if you use the ModSettings -->
 		<PackageReference Include="STBlade.Modding.TLD.ModSettings" Version="1.9.0" />
 		<!-- Only if you need ModData  -->
@@ -39,6 +49,7 @@
 		<Using Include="UnityEngine" />
 		<Using Include="ModSettings" />
 		<Using Include="ModData" />
+		<Using Include="ModComponent" />
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -52,7 +63,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="Afflictions\Patches\AfflictionsEffects\Patches.cs" />
+		<Compile Include="Afflictions\Patches\Effects\Patches.cs" />
 		<Compile Include="Afflictions\Boredom\Bored.cs" />
 		<Compile Include="Afflictions\Boredom\Extremely Bored.cs" />
 		<Compile Include="Afflictions\Boredom\Very Bored.cs" />
@@ -60,15 +71,30 @@
 		<Compile Include="Afflictions\Depression\Miserable.cs" />
 		<Compile Include="Afflictions\Depression\Sad.cs" />
 		<Compile Include="Afflictions\Depression\Weepy.cs" />
-		<Compile Include="Afflictions\Patches\RepairOnCrashPatch.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="ModSettings.cs" />
 		<Compile Include="Afflictions\Patches\VisualPatch.cs" />
+		<Compile Include="Persistence\MoodState.cs" />
+		<Compile Include="Persistence\SaveDataManager.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\Icons\Bored.png" />
+	  <EmbeddedResource Include="Resources\Icons\ExtremelyBored.png" />
+	  <EmbeddedResource Include="Resources\Icons\Hopeless.png" />
+	  <EmbeddedResource Include="Resources\Icons\Miserable.png" />
+	  <EmbeddedResource Include="Resources\Icons\Sad.png" />
+	  <EmbeddedResource Include="Resources\Icons\VeryBored.png" />
+	  <EmbeddedResource Include="Resources\Icons\Weepy.png" />
+	  <EmbeddedResource Include="Resources\Localization\Localization.json" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Reference Include="AfflictionComponent">
 			<HintPath>$(TheLongDarkPath)\Mods\AfflictionComponent.dll</HintPath>
+		</Reference>
+		<Reference Include="ModComponent">
+			<HintPath>$(TheLongDarkPath)\Mods\ModComponent.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
