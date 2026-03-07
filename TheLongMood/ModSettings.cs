@@ -19,6 +19,16 @@
         [Slider(1, 60, 60, NumberFormat = "{0}min")]
         public int TimeForBoredomIncrease = 10;
 
+        [Section("Fishing Settings")]
+
+        [Name("Breaking ice")]
+        [Description("Do you want breaking ice generate boredom ?")]
+        public bool IsBreakingIceGenBoredom = false;
+
+        [Name("Fishing")]
+        [Description("Do you want fishing generate boredom ?")]
+        public bool IsFishingGenBoredom = false;
+
         [Section("Struggle Settings")]
 
         [Name("Attack aftershock")]

@@ -71,6 +71,7 @@
 		<Compile Include="Afflictions\Depression\Miserable.cs" />
 		<Compile Include="Afflictions\Depression\Sad.cs" />
 		<Compile Include="Afflictions\Depression\Weepy.cs" />
+		<Compile Include="Afflictions\Patches\FishingPatch.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="ModSettings.cs" />
 		<Compile Include="Afflictions\Patches\VisualPatch.cs" />

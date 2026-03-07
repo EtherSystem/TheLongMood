@@ -5,11 +5,12 @@ using static TheLongMood.Afflictions.Boredom.VeryBored;
 using static TheLongMood.Afflictions.Depression.Weepy;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Boredom.Bored;
+using TheLongMood.Afflictions.Patches;
 using AfflictionComponent.Components;
 using TheLongMood.Persistence;
 using LocalizationUtilities;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.2.0", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.2.1", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -55,8 +56,8 @@ namespace TheLongMood
         private float BOREDOM_DELAY_HOURS;
 
         private bool _dirty = false;
-
         private bool _wasBoredomBlocked = true;
+        private bool? _lastLoggedIsClearingIce = null;
 
         public override void OnInitializeMelon()
         {
@@ -141,6 +142,7 @@ namespace TheLongMood
             _currentDepressionTier = 0;
 
             _wasBoredomBlocked = true;
+            _lastLoggedIsClearingIce = null;
 
             _instantPenaltyCached = Settings.options.InstantStrugglePenalty;
             _hoursToApplyCached = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
@@ -258,6 +260,21 @@ namespace TheLongMood
 
             float realElapsed = _realAccum;
             _realAccum = 0f;
+
+            // -----------fishing bools----------------
+
+            var fishingHolePanel = InterfaceManager.GetPanel<Panel_IceFishingHoleClear>();
+            bool isClearingIce = fishingHolePanel != null && fishingHolePanel.IsClearingIce();
+
+            if (Settings.options.IsLogging && _lastLoggedIsClearingIce != isClearingIce)
+            {
+                LoggerInstance.Msg($"isClearingIce : {isClearingIce}");
+                _lastLoggedIsClearingIce = isClearingIce;
+            }
+
+            bool isFishing = FishingPatch.IsFishing;
+
+            // --------------------------------
 
             float gameHoursPassed = timeOfDay.GetTODHours(realElapsed);
             if (gameHoursPassed <= 0f) return;
@@ -397,7 +414,9 @@ namespace TheLongMood
                 || isCleaning
                 || isHarvesting
                 || isRepairing
-                || isSharpening);
+                || isSharpening
+                || (isClearingIce && !Settings.options.IsBreakingIceGenBoredom)
+                || (isFishing && !Settings.options.IsFishingGenBoredom));
 
             var heldItem = player.m_ItemInHands;
             bool holdsLightSource = false;
