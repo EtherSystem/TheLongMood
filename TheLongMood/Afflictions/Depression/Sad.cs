@@ -1,13 +1,18 @@
 ﻿using AfflictionComponent.Components;
-using AfflictionComponent.Interfaces;
 using AfflictionComponent.Enums;
+using AfflictionComponent.Interfaces;
+using TheLongMood.Resources.Localization;
 
 namespace TheLongMood.Afflictions.Depression
 {
     internal class Sad
     {
-        public class SadAffliction : CustomAffliction, IDuration, IRemedies, IInstance
+        public class SadAffliction : CustomAffliction, IDuration, IRemedies, IInstance, ILocalizableAffliction
         {
+            private const string NAME_KEY = "GAMEPLAY_SadName";
+            private const string CAUSE_KEY = "GAMEPLAY_DepressionCause";
+            private const string DESC_KEY = "GAMEPLAY_SadDescription";
+
             public InstanceType Type { get; set; } = InstanceType.Single;
             public void OnFoundExistingInstance(CustomAffliction existingAffliction)
             {
@@ -28,7 +33,7 @@ namespace TheLongMood.Afflictions.Depression
 
             public bool InstantHeal { get; set; } = true;
 
-            public SadAffliction(AfflictionBodyArea bodyArea) : base("GAMEPLAY_SadName", "GAMEPLAY_DepressionCause", "GAMEPLAY_SadDescription", null, "TheLongMood.Resources.Icons.Sad.png", bodyArea, true)
+            public SadAffliction(AfflictionBodyArea bodyArea) : base(NAME_KEY, CAUSE_KEY, DESC_KEY, null, "TheLongMood.Resources.Icons.Sad.png", bodyArea, true)
             {
             }
 
@@ -45,6 +50,21 @@ namespace TheLongMood.Afflictions.Depression
             public override void OnUpdate()
             {
                 IsActive = true;
+            }
+
+            public void RefreshLocalization()
+            {
+                string oldName = m_Name;
+
+                m_Name = Localization.Get(NAME_KEY);
+                m_CauseText = Localization.Get(CAUSE_KEY);
+                m_Description = Localization.Get(DESC_KEY);
+                m_DescriptionNoHeal = null;
+
+                if (Settings.options.IsLogging && Core.Instance != null)
+                {
+                    Core.Instance.LoggerInstance.Msg($"Sad refresh -> '{oldName}' => '{m_Name}'");
+                }
             }
         }
     }

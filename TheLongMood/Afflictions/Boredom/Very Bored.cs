@@ -1,13 +1,18 @@
 ﻿using AfflictionComponent.Components;
-using AfflictionComponent.Interfaces;
 using AfflictionComponent.Enums;
+using AfflictionComponent.Interfaces;
+using TheLongMood.Resources.Localization;
 
 namespace TheLongMood.Afflictions.Boredom
 {
     internal class VeryBored
     {
-        public class VeryBoredAffliction : CustomAffliction, IDuration, IRemedies, IInstance
+        public class VeryBoredAffliction : CustomAffliction, IDuration, IRemedies, IInstance, ILocalizableAffliction
         {
+            private const string NAME_KEY = "GAMEPLAY_VeryBoredName";
+            private const string CAUSE_KEY = "GAMEPLAY_BoredomCause";
+            private const string DESC_KEY = "GAMEPLAY_VeryBoredDescription";
+
             public InstanceType Type { get; set; } = InstanceType.Single;
             public void OnFoundExistingInstance(CustomAffliction existingAffliction)
             {
@@ -28,7 +33,7 @@ namespace TheLongMood.Afflictions.Boredom
 
             public bool InstantHeal { get; set; } = true;
 
-            public VeryBoredAffliction(AfflictionBodyArea bodyArea) : base("GAMEPLAY_VeryBoredName", "GAMEPLAY_BoredomCause", "GAMEPLAY_VeryBoredDescription", null, "TheLongMood.Resources.Icons.VeryBored.png", bodyArea, true)
+            public VeryBoredAffliction(AfflictionBodyArea bodyArea) : base(NAME_KEY, CAUSE_KEY, DESC_KEY, null, "TheLongMood.Resources.Icons.VeryBored.png", bodyArea, true)
             {
             }
 
@@ -45,6 +50,21 @@ namespace TheLongMood.Afflictions.Boredom
             public override void OnUpdate()
             {
                 IsActive = true;
+            }
+
+            public void RefreshLocalization()
+            {
+                string oldName = m_Name;
+
+                m_Name = Localization.Get(NAME_KEY);
+                m_CauseText = Localization.Get(CAUSE_KEY);
+                m_Description = Localization.Get(DESC_KEY);
+                m_DescriptionNoHeal = null;
+
+                if (Settings.options.IsLogging && Core.Instance != null)
+                {
+                    Core.Instance.LoggerInstance.Msg($"VeryBored refresh -> '{oldName}' => '{m_Name}'");
+                }
             }
         }
     }

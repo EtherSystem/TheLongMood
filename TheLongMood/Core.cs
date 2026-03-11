@@ -1,16 +1,17 @@
-﻿using static TheLongMood.Afflictions.Boredom.ExtremelyBored;
-using static TheLongMood.Afflictions.Depression.Miserable;
-using static TheLongMood.Afflictions.Depression.Hopeless;
-using static TheLongMood.Afflictions.Boredom.VeryBored;
-using static TheLongMood.Afflictions.Depression.Weepy;
-using static TheLongMood.Afflictions.Depression.Sad;
-using static TheLongMood.Afflictions.Boredom.Bored;
-using TheLongMood.Afflictions.Patches;
-using AfflictionComponent.Components;
-using TheLongMood.Persistence;
+﻿using AfflictionComponent.Components;
 using LocalizationUtilities;
+using TheLongMood.Afflictions.Patches;
+using TheLongMood.Persistence;
+using TheLongMood.Resources.Localization;
+using static TheLongMood.Afflictions.Boredom.Bored;
+using static TheLongMood.Afflictions.Boredom.ExtremelyBored;
+using static TheLongMood.Afflictions.Boredom.VeryBored;
+using static TheLongMood.Afflictions.Depression.Hopeless;
+using static TheLongMood.Afflictions.Depression.Miserable;
+using static TheLongMood.Afflictions.Depression.Sad;
+using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.2.1", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.2.2", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -208,9 +209,28 @@ namespace TheLongMood
                     a.Cure();
             }
 
-            if (newTier == 3) new ExtremelyBoredAffliction(AfflictionBodyArea.Head).Start();
-            else if (newTier == 2) new VeryBoredAffliction(AfflictionBodyArea.Head).Start();
-            else if (newTier == 1) new BoredAffliction(AfflictionBodyArea.Head).Start();
+            bool addedAffliction = false;
+
+            if (newTier == 3)
+            {
+                new ExtremelyBoredAffliction(AfflictionBodyArea.Head).Start();
+                addedAffliction = true;
+            }
+            else if (newTier == 2)
+            {
+                new VeryBoredAffliction(AfflictionBodyArea.Head).Start();
+                addedAffliction = true;
+            }
+            else if (newTier == 1)
+            {
+                new BoredAffliction(AfflictionBodyArea.Head).Start();
+                addedAffliction = true;
+            }
+
+            if (addedAffliction)
+            {
+                AfflictionSaveHelper.QueueSurvivalSave();
+            }
         }
 
         private void EnsureSingleDepressionTier()
@@ -230,17 +250,43 @@ namespace TheLongMood
             for (int i = mgr.m_Afflictions.Count - 1; i >= 0; i--)
             {
                 var a = mgr.m_Afflictions[i];
-                if (a is SadAffliction || a is WeepyAffliction || a is MiserableAffliction || a is HopelessAffliction) a.Cure();
+                if (a is SadAffliction || a is WeepyAffliction || a is MiserableAffliction || a is HopelessAffliction)
+                    a.Cure();
             }
 
-            if (newTier == 4) new HopelessAffliction(AfflictionBodyArea.Head).Start();
-            else if (newTier == 3) new MiserableAffliction(AfflictionBodyArea.Head).Start();
-            else if (newTier == 2) new WeepyAffliction(AfflictionBodyArea.Head).Start();
-            else if (newTier == 1) new SadAffliction(AfflictionBodyArea.Head).Start();
+            bool addedAffliction = false;
+
+            if (newTier == 4)
+            {
+                new HopelessAffliction(AfflictionBodyArea.Head).Start();
+                addedAffliction = true;
+            }
+            else if (newTier == 3)
+            {
+                new MiserableAffliction(AfflictionBodyArea.Head).Start();
+                addedAffliction = true;
+            }
+            else if (newTier == 2)
+            {
+                new WeepyAffliction(AfflictionBodyArea.Head).Start();
+                addedAffliction = true;
+            }
+            else if (newTier == 1)
+            {
+                new SadAffliction(AfflictionBodyArea.Head).Start();
+                addedAffliction = true;
+            }
+
+            if (addedAffliction)
+            {
+                AfflictionSaveHelper.QueueSurvivalSave();
+            }
         }
 
         public override void OnUpdate()
         {
+            LocalizationRefresh.FlushPendingRefresh();
+
             if (GameManager.m_Instance == null || GameManager.m_IsPaused) return;
             if (GameManager.IsBootSceneActive() || GameManager.IsMainMenuActive() || GameManager.IsEmptySceneActive()) return;
 

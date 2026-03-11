@@ -63,6 +63,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="AfflictionSaveHelper.cs" />
 		<Compile Include="Afflictions\Patches\Effects\Patches.cs" />
 		<Compile Include="Afflictions\Boredom\Bored.cs" />
 		<Compile Include="Afflictions\Boredom\Extremely Bored.cs" />
@@ -77,6 +78,8 @@
 		<Compile Include="Afflictions\Patches\VisualPatch.cs" />
 		<Compile Include="Persistence\MoodState.cs" />
 		<Compile Include="Persistence\SaveDataManager.cs" />
+		<Compile Include="Resources\Localization\ILocalizableAffliction.cs" />
+		<Compile Include="Resources\Localization\LocalizationRefresh.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
