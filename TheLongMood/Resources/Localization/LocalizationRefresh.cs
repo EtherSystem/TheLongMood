@@ -15,12 +15,18 @@ namespace TheLongMood.Resources.Localization
         {
             if (!_pendingRefresh) return;
 
+            string scene = GameManager.m_ActiveScene;
+            if (string.IsNullOrEmpty(scene) || scene == "MainMenu" || scene == "Boot" || scene == "Empty") return;
+
             _pendingRefresh = false;
             RefreshActiveCustomAfflictions();
         }
 
         internal static void RefreshActiveCustomAfflictions()
         {
+            string scene = GameManager.m_ActiveScene;
+            if (string.IsNullOrEmpty(scene) || scene == "MainMenu" || scene == "Boot" || scene == "Empty") return;
+
             var mgr = AfflictionManager.GetAfflictionManagerInstance();
             if (mgr?.m_Afflictions == null) return;
 
@@ -51,6 +57,9 @@ namespace TheLongMood.Resources.Localization
     {
         private static void Postfix()
         {
+            string scene = GameManager.m_ActiveScene;
+            if (string.IsNullOrEmpty(scene) || scene == "MainMenu" || scene == "Boot" || scene == "Empty") return;
+
             LocalizationRefresh.RequestRefresh();
 
             if (Settings.options.IsLogging && Core.Instance != null)
