@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.2.2", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.2.4", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -307,6 +307,11 @@ namespace TheLongMood
             float realElapsed = _realAccum;
             _realAccum = 0f;
 
+            // ----------snowshelter build-------------
+
+            var SnowShelterBuild = InterfaceManager.GetPanel<Panel_SnowShelterBuild>();
+            bool isBuildingSnowShelter = SnowShelterBuild.IsBuilding();
+
             // -----------fishing bools----------------
 
             var fishingHolePanel = InterfaceManager.GetPanel<Panel_IceFishingHoleClear>();
@@ -461,6 +466,7 @@ namespace TheLongMood
                 || isHarvesting
                 || isRepairing
                 || isSharpening
+                || isBuildingSnowShelter
                 || (isClearingIce && !Settings.options.IsBreakingIceGenBoredom)
                 || (isFishing && !Settings.options.IsFishingGenBoredom));
 
