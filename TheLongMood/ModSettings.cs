@@ -64,6 +64,38 @@
         [Slider(1, 12, 12, NumberFormat = "{0}h")]
         public int HoursToApply = 6;
 
+        [Section("Misery afflictions")]
+
+        [Name("Diminished Form")]
+        [Description("Default: Nothing - Choose whether Diminished Form affects Boredom, Depression, Both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int DiminishedFormMode = 3;
+
+        [Name("Sour Stomach")]
+        [Description("Default: Nothing - Choose whether Sour Stomach affects Boredom, Depression, Both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int SourStomachMode = 3;
+
+        [Name("Frigid Bones")]
+        [Description("Default: Nothing - Choose whether Frigid Bones affects Boredom, Depression, Both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int FrigidBonesMode = 3;
+
+        [Name("Rheumatic Joints")]
+        [Description("Default: Nothing - Choose whether Rheumatic Joints affects Boredom, Depression, Both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int RheumaticJointsMode = 3;
+
+        [Name("Haunted Mind")]
+        [Description("Default: Nothing - Choose whether Haunted Mind affects Boredom, Depression, Both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int HauntedMindMode = 3;
+
+        [Name("Broken Body")]
+        [Description("Default: Nothing - Choose whether Broken Body affects Boredom, Depression, Both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int BrokenBodyMode = 3;
+
         [Section("Advanced")]
 
         [Name("Show advanced options")]

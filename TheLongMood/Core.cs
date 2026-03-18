@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.2.4", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.0", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -42,11 +42,11 @@ namespace TheLongMood
         private bool _wasEating = false;
         private const float EATING_DEPRESSION_BONUS = 2f;
 
-        //anti eating abuse
+        // anti eating abuse
         private float _eatingAccumGameHours = 0f;
         private float _eatingBonusCooldownHours = 0f;
-        private const float MIN_EATING_HOURS = 10f / 3600f;           // 10s in-game
-        private const float EATING_BONUS_COOLDOWN_HOURS = 2f / 60f;   // 2min in-game
+        private const float MIN_EATING_HOURS = 10f / 3600f;         // 10s in-game
+        private const float EATING_BONUS_COOLDOWN_HOURS = 2f / 60f; // 2min in-game
 
         private bool _wasInStruggle = false;
         private bool _instantPenaltyCached = false;
@@ -59,6 +59,22 @@ namespace TheLongMood
         private bool _dirty = false;
         private bool _wasBoredomBlocked = true;
         private bool? _lastLoggedIsClearingIce = null;
+
+        private enum MiseryMoodMode
+        {
+            Boredom = 0,
+            Depression = 1,
+            Both = 2,
+            Nothing = 3
+        }
+
+        private struct MiseryMoodState
+        {
+            public int TrackedAfflictionCount;
+            public bool HasTrackedMiseryAffliction;
+            public bool GenerateBoredom;
+            public bool GenerateDepression;
+        }
 
         public override void OnInitializeMelon()
         {
@@ -171,6 +187,7 @@ namespace TheLongMood
                 Core.State.AftershockRemainingHours = 0f;
                 _dirty = true;
             }
+
             _currentBoredomTier = -1;
             _currentDepressionTier = -1;
         }
@@ -283,6 +300,74 @@ namespace TheLongMood
             }
         }
 
+        private static MiseryMoodMode GetMiseryMoodMode(int settingValue)
+        {
+            return settingValue switch
+            {
+                0 => MiseryMoodMode.Boredom,
+                1 => MiseryMoodMode.Depression,
+                2 => MiseryMoodMode.Both,
+                _ => MiseryMoodMode.Nothing
+            };
+        }
+
+        private static void EvaluateMiseryAffliction(Condition cond, AfflictionType afflictionType, int settingValue, ref MiseryMoodState state)
+        {
+            if (cond == null || !cond.HasSpecificAffliction(afflictionType))
+                return;
+
+            state.TrackedAfflictionCount++;
+            state.HasTrackedMiseryAffliction = true;
+
+            switch (GetMiseryMoodMode(settingValue))
+            {
+                case MiseryMoodMode.Boredom:
+                    state.GenerateBoredom = true;
+                    break;
+
+                case MiseryMoodMode.Depression:
+                    state.GenerateDepression = true;
+                    break;
+
+                case MiseryMoodMode.Both:
+                    state.GenerateBoredom = true;
+                    state.GenerateDepression = true;
+                    break;
+
+                case MiseryMoodMode.Nothing:
+                default:
+                    break;
+            }
+        }
+
+        private static bool HasOtherNonMiseryAfflictionOrRisk(Condition cond, MiseryMoodState miseryMood)
+        {
+            if (cond == null)
+                return false;
+
+            if (cond.HasRiskAffliction())
+                return true;
+
+            var mgr = AfflictionManager.GetAfflictionManagerInstance();
+            int activeAfflictionCount = mgr?.m_Afflictions?.Count ?? 0;
+
+            return activeAfflictionCount > miseryMood.TrackedAfflictionCount;
+        }
+
+        private static MiseryMoodState GetMiseryMoodState(Condition cond)
+        {
+            MiseryMoodState state = default;
+
+            EvaluateMiseryAffliction(cond, AfflictionType.DiminishedState, Settings.options.DiminishedFormMode, ref state);
+            EvaluateMiseryAffliction(cond, AfflictionType.SourStomach, Settings.options.SourStomachMode, ref state);
+            EvaluateMiseryAffliction(cond, AfflictionType.PoorCirculation, Settings.options.FrigidBonesMode, ref state);
+            EvaluateMiseryAffliction(cond, AfflictionType.WeakJoints, Settings.options.RheumaticJointsMode, ref state);
+            EvaluateMiseryAffliction(cond, AfflictionType.UnsettledSleep, Settings.options.HauntedMindMode, ref state);
+            EvaluateMiseryAffliction(cond, AfflictionType.BrokenBody, Settings.options.BrokenBodyMode, ref state);
+
+            return state;
+        }
+
         public override void OnUpdate()
         {
             LocalizationRefresh.FlushPendingRefresh();
@@ -307,13 +392,11 @@ namespace TheLongMood
             float realElapsed = _realAccum;
             _realAccum = 0f;
 
-            // ----------snowshelter build-------------
-
+            // ---------- snowshelter build ----------
             var SnowShelterBuild = InterfaceManager.GetPanel<Panel_SnowShelterBuild>();
             bool isBuildingSnowShelter = SnowShelterBuild.IsBuilding();
 
-            // -----------fishing bools----------------
-
+            // ----------- fishing bools -------------
             var fishingHolePanel = InterfaceManager.GetPanel<Panel_IceFishingHoleClear>();
             bool isClearingIce = fishingHolePanel != null && fishingHolePanel.IsClearingIce();
 
@@ -325,15 +408,14 @@ namespace TheLongMood
 
             bool isFishing = FishingPatch.IsFishing;
 
-            // --------------------------------
-
+            // ---------------------------------------
             float gameHoursPassed = timeOfDay.GetTODHours(realElapsed);
             if (gameHoursPassed <= 0f) return;
             if (gameHoursPassed > 12f) return;
 
             if (player.PlayerIsSleeping()) return;
 
-            // ----------------wildlife attack logic-------------------
+            // ---------------- wildlife attack logic ----------------
             bool aftershockActive = false;
 
             var struggle = GameManager.GetPlayerStruggleComponent();
@@ -347,7 +429,8 @@ namespace TheLongMood
                     Core.State.AftershockRemainingHours = 0f;
                     _dirty = true;
 
-                    if (Settings.options.IsLogging) LoggerInstance.Msg("Attack aftershock disabled → cleared pending aftershock state");
+                    if (Settings.options.IsLogging)
+                        LoggerInstance.Msg("Attack aftershock disabled → cleared pending aftershock state");
                 }
 
                 _wasInStruggle = inStruggle;
@@ -379,7 +462,8 @@ namespace TheLongMood
                     if (!Mathf.Approximately(hoursToApply, _hoursToApplyCached))
                     {
                         _hoursToApplyCached = hoursToApply;
-                        if (Core.State.AftershockPool > 0f) Core.State.AftershockRemainingHours = hoursToApply;
+                        if (Core.State.AftershockPool > 0f)
+                            Core.State.AftershockRemainingHours = hoursToApply;
                     }
                 }
 
@@ -420,7 +504,8 @@ namespace TheLongMood
                         Core.State.Depression = Mathf.Clamp(Core.State.Depression + penalty, 0f, 100f);
                         _dirty = true;
 
-                        if (Settings.options.IsLogging) LoggerInstance.Msg($"{attacker} attack detected → Depression +{penalty:0.##} (instant) ({before:0.##} -> {Core.State.Depression:0.##})");
+                        if (Settings.options.IsLogging)
+                            LoggerInstance.Msg($"{attacker} attack detected → Depression +{penalty:0.##} (instant) ({before:0.##} -> {Core.State.Depression:0.##})");
                     }
                     else
                     {
@@ -428,18 +513,18 @@ namespace TheLongMood
                         Core.State.AftershockRemainingHours = hoursToApply;
                         _dirty = true;
 
-                        if (Settings.options.IsLogging) LoggerInstance.Msg($"{attacker} attack detected → scheduled Depression +{penalty:0.##} over {hoursToApply:0.##}h");
+                        if (Settings.options.IsLogging)
+                            LoggerInstance.Msg($"{attacker} attack detected → scheduled Depression +{penalty:0.##} over {hoursToApply:0.##}h");
                     }
                 }
 
                 _wasInStruggle = inStruggle;
                 aftershockActive = (!instant && Core.State.AftershockPool > 0f);
             }
-            //----------------------------
+            // -------------------------------------------------------
 
             float distanceToFire = fireManager.GetDistanceToClosestFire(playerTransform.position);
             bool isNearFire = distanceToFire < 5f;
-
 
             var examinePanel = InterfaceManager.GetPanel<Panel_Inventory_Examine>();
             bool isReading = (examinePanel != null && examinePanel.IsReading());
@@ -479,14 +564,17 @@ namespace TheLongMood
                 else if (heldItem.m_FlareItem?.IsBurning() == true) holdsLightSource = true;
             }
 
-            // ------eating logic--------
+            // ------ eating logic ------
             var hunger = GameManager.GetHungerComponent();
             bool isEating = (hunger != null && hunger.IsEatingInProgress());
-            if (_eatingBonusCooldownHours > 0f) _eatingBonusCooldownHours = Mathf.Max(0f, _eatingBonusCooldownHours - gameHoursPassed);
-            if (isEating) _eatingAccumGameHours += gameHoursPassed;
-            //---------------------------
+            if (_eatingBonusCooldownHours > 0f)
+                _eatingBonusCooldownHours = Mathf.Max(0f, _eatingBonusCooldownHours - gameHoursPassed);
+            if (isEating)
+                _eatingAccumGameHours += gameHoursPassed;
+            // --------------------------
 
-            bool hasAffliction = cond.HasAffliction() || cond.HasRiskAffliction();
+            MiseryMoodState miseryMood = GetMiseryMoodState(cond);
+            bool hasOtherNonMiseryAfflictionOrRisk = HasOtherNonMiseryAfflictionOrRisk(cond, miseryMood);
 
             bool boredomBlocked = isActivity || holdsLightSource || isNearFire;
 
@@ -506,38 +594,62 @@ namespace TheLongMood
                 {
                     Core.State.Boredom += Settings.options.DropRate * gameHoursPassed;
 
-                    if (_wasBoredomBlocked)
-                        if (Settings.options.IsLogging) LoggerInstance.Msg("Inactivity detected");
+                    if (_wasBoredomBlocked && Settings.options.IsLogging)
+                        LoggerInstance.Msg("Inactivity detected");
                 }
+            }
+
+            if (miseryMood.GenerateBoredom)
+            {
+                Core.State.Boredom += Settings.options.DropRate * gameHoursPassed;
+
+                if (Settings.options.IsLogging)
+                    LoggerInstance.Msg("Tracked Misery affliction is generating Boredom");
             }
 
             _wasBoredomBlocked = boredomBlocked;
 
-            if (hasAffliction)
+            if (miseryMood.GenerateDepression)
             {
                 Core.State.Depression += (Settings.options.DropRate * 2f) * gameHoursPassed;
+
+                if (Settings.options.IsLogging)
+                    LoggerInstance.Msg("Tracked Misery affliction is generating Depression");
             }
-            else if (isReading)
+
+            if (hasOtherNonMiseryAfflictionOrRisk)
             {
-                Core.State.Depression -= (Settings.options.DropRate * 1f) * gameHoursPassed;
+                Core.State.Depression += (Settings.options.DropRate * 2f) * gameHoursPassed;
+
+                if (Settings.options.IsLogging && !miseryMood.GenerateDepression)
+                    LoggerInstance.Msg("Non-Misery affliction or risk is generating Depression");
             }
-            else if (Core.State.Boredom >= 90f)
+            else if (!miseryMood.GenerateDepression)
             {
-                Core.State.Depression += (Settings.options.DropRate * 2.96f) * gameHoursPassed;
+                if (isReading)
+                {
+                    Core.State.Depression -= (Settings.options.DropRate * 1f) * gameHoursPassed;
+                }
+                else if (Core.State.Boredom >= 90f)
+                {
+                    Core.State.Depression += (Settings.options.DropRate * 2.96f) * gameHoursPassed;
+                }
+                else if (Core.State.Boredom >= 75f)
+                {
+                    Core.State.Depression += (Settings.options.DropRate * 2.22f) * gameHoursPassed;
+                }
+                else if (Core.State.Boredom >= 50f)
+                {
+                    Core.State.Depression += (Settings.options.DropRate * 1.48f) * gameHoursPassed;
+                }
+                else
+                {
+                    if (!aftershockActive)
+                        Core.State.Depression -= (Settings.options.DropRate * 0.5f) * gameHoursPassed;
+                }
             }
-            else if (Core.State.Boredom >= 75f)
-            {
-                Core.State.Depression += (Settings.options.DropRate * 2.22f) * gameHoursPassed;
-            }
-            else if (Core.State.Boredom >= 50f)
-            {
-                Core.State.Depression += (Settings.options.DropRate * 1.48f) * gameHoursPassed;
-            }
-            else
-            {
-                if (!aftershockActive) Core.State.Depression -= (Settings.options.DropRate * 0.5f) * gameHoursPassed;
-            }
-            if (hunger!= null && _wasEating && !isEating)
+
+            if (hunger != null && _wasEating && !isEating)
             {
                 if (_eatingBonusCooldownHours <= 0f && _eatingAccumGameHours >= MIN_EATING_HOURS)
                 {
@@ -545,14 +657,17 @@ namespace TheLongMood
                     _eatingBonusCooldownHours = EATING_BONUS_COOLDOWN_HOURS;
                     _dirty = true;
                 }
+
                 _eatingAccumGameHours = 0f;
             }
+
             _wasEating = isEating;
 
             // apply attack aftershock over time (only if not instant)
             if (Settings.options.IsAttackAftershock && !Settings.options.InstantStrugglePenalty && Core.State.AftershockPool > 0f)
             {
-                if (Core.State.AftershockRemainingHours <= 0f) Core.State.AftershockRemainingHours = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
+                if (Core.State.AftershockRemainingHours <= 0f)
+                    Core.State.AftershockRemainingHours = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
 
                 float h = Mathf.Min(gameHoursPassed, Core.State.AftershockRemainingHours);
                 float add = (Core.State.AftershockPool / Core.State.AftershockRemainingHours) * h;
