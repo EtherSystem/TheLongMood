@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.0", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.1", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -340,6 +340,17 @@ namespace TheLongMood
             }
         }
 
+        private static bool IsTLMAffliction(object? affliction)
+        {
+            return affliction is SadAffliction
+                || affliction is WeepyAffliction
+                || affliction is MiserableAffliction
+                || affliction is HopelessAffliction
+                || affliction is BoredAffliction
+                || affliction is VeryBoredAffliction
+                || affliction is ExtremelyBoredAffliction;
+        }
+
         private static bool HasOtherNonMiseryAfflictionOrRisk(Condition cond, MiseryMoodState miseryMood)
         {
             if (cond == null)
@@ -349,9 +360,24 @@ namespace TheLongMood
                 return true;
 
             var mgr = AfflictionManager.GetAfflictionManagerInstance();
-            int activeAfflictionCount = mgr?.m_Afflictions?.Count ?? 0;
+            if (mgr?.m_Afflictions == null)
+                return false;
 
-            return activeAfflictionCount > miseryMood.TrackedAfflictionCount;
+            int activeRelevantAfflictionCount = 0;
+
+            for (int i = 0; i < mgr.m_Afflictions.Count; i++)
+            {
+                var a = mgr.m_Afflictions[i];
+                if (a == null)
+                    continue;
+
+                if (IsTLMAffliction(a))
+                    continue;
+
+                activeRelevantAfflictionCount++;
+            }
+
+            return activeRelevantAfflictionCount > miseryMood.TrackedAfflictionCount;
         }
 
         private static MiseryMoodState GetMiseryMoodState(Condition cond)

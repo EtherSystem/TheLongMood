@@ -64,6 +64,7 @@
         [Slider(1, 12, 12, NumberFormat = "{0}h")]
         public int HoursToApply = 6;
 
+        //------------------------------ Misery afflictions support ------------------------------
         [Section("Misery afflictions")]
 
         [Name("Diminished Form")]
@@ -95,6 +96,30 @@
         [Description("Default: Nothing - Choose whether Broken Body affects Boredom, Depression, Both, or neither.")]
         [Choice("Boredom", "Depression", "Both", "Nothing")]
         public int BrokenBodyMode = 3;
+
+        // -------------------------MajorMiseries Requiem stages support----------------------------
+        [Section("Requiem stages")]
+
+        [Name("Omen")]
+        [Description("Default: Nothing - Choose whether Omen affects Boredom, Depression, both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int OmenMode = 3;
+
+        [Name("Dirge")]
+        [Description("Default: Nothing - Choose whether Dirge affects Boredom, Depression, both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int DirgeMode = 3;
+
+        [Name("Knell")]
+        [Description("Default: Nothing - Choose whether Knell affects Boredom, Depression, both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int KnellMode = 3;
+
+        [Name("Requiem")]
+        [Description("Default: Nothing - Choose whether Requiem affects Boredom, Depression, both, or neither.")]
+        [Choice("Boredom", "Depression", "Both", "Nothing")]
+        public int RequiemMode = 3;
+        // -----------------------------------------------------------------------------------------
 
         [Section("Advanced")]
 

@@ -5,7 +5,7 @@
         "Spanish (Spain)": "Aburrida",
         "German": "Gelangweilt",
         "Turkish": "Sıkılmış",
-        "Russian": "Скучающий"
+        "Russian": "Скучно"
     },
     "GAMEPLAY_BoredDescription": {
         "English": "Why does nothing interesting ever happen around here ?",
@@ -31,7 +31,7 @@
         "Spanish (Spain)": "Ya casi no aguanto más. ¿No hay nada divertido que hacer ?",
         "German": "Ich halte es kaum noch aus. Gibt es denn gar nichts mehr, was Spaß macht ?",
         "Turkish": "Artık dayanamıyorum. Yapacak eğlenceli bir şey yok mu ?",
-        "Russian": "Я уже еле выдержала. Неужели нечем заняться ?"
+        "Russian": "Я так больше не могу. Неужели нельзя заняться прям НИЧЕМ интересным  ?"
     },
 
 
@@ -67,7 +67,7 @@
         "Spanish (Spain)": "Lo estoy pasando mal últimamente. Busca una manera de olvidar tus problemas.",
         "German": "Ich habe es in letzter Zeit schwer. Suche nach einer Möglichkeit, meine Sorgen zu vergessen.",
         "Turkish": "Son zamanlarda zor zamanlar geçiriyorsunuz. Sorunlarınızı unutmanın bir yolunu bulun.",
-        "Russian": "В последнее время переживаю трудные времена. Найдите способ забыть о своих проблемах."
+        "Russian": "В последнее время вы переживаете трудные времена. Найдите способ забыть о своих проблемах."
     },
 
 
@@ -77,7 +77,7 @@
         "Spanish (Spain)": "Llorona",
         "German": "Weinerlich",
         "Turkish": "Ağlayan",
-        "Russian": "Плаксивый"
+        "Russian": "Плаксивость"
     },
     "GAMEPLAY_WeepyDescription": {
         "English": "You always feel on the verge of tears. Nothing seems to go your way.",
@@ -85,7 +85,7 @@
         "Spanish (Spain)": "Siempre estás al borde de las lágrimas. Nada parece salirte bien.",
         "German": "Du stehst ständig kurz vor den Tränen. Nichts scheint so zu laufen, wie du es dir wünschst.",
         "Turkish": "Sürekli ağlamak üzereymiş gibi hissediyorsun. Hiçbir şey yolunda gitmiyor gibi.",
-        "Russian": "Ты постоянно чувствуешь, что вот-вот расплачешься. Кажется, ничего не получается."
+        "Russian": "Вы постоянно чувствуете, что вот-вот расплачетесь. Кажется, ничего не получается."
     },
 
 
@@ -95,7 +95,7 @@
         "Spanish (Spain)": "Miserable",
         "German": "Miserabel",
         "Turkish": "Acınası",
-        "Russian": "Убогий"
+        "Russian": "Отчаяние"
     },
     "GAMEPLAY_MiserableDescription": {
         "English": "Ravaged by mourning and desperation. You're losing hope...",
@@ -103,7 +103,7 @@
         "Spanish (Spain)": "Devastado por el duelo y la desesperación. Estás perdiendo la esperanza...",
         "German": "Von Trauer und Verzweiflung gezeichnet. Du verlierst die Hoffnung...",
         "Turkish": "Yas ve umutsuzlukla harap olmuşsun. Umudunu kaybediyorsun...",
-        "Russian": "Измученный горем и отчаянием. Ты теряешь надежду..."
+        "Russian": "Измученные горем и отчаянием. Вы теряете надежду..."
     },
 
 
@@ -113,7 +113,7 @@
         "Spanish (Spain)": "Desesperanzado",
         "German": "Hoffnungslos",
         "Turkish": "Umutsuz",
-        "Russian": "Безнадежно"
+        "Russian": "Безнадежность"
     },
     "GAMEPLAY_HopelessDescription": {
         "English": "What's the point in going on ? Nothing good will ever happen...",
