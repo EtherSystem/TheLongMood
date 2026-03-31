@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.1", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.2", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -399,7 +399,8 @@ namespace TheLongMood
             LocalizationRefresh.FlushPendingRefresh();
 
             if (GameManager.m_Instance == null || GameManager.m_IsPaused) return;
-            if (GameManager.IsBootSceneActive() || GameManager.IsMainMenuActive() || GameManager.IsEmptySceneActive()) return;
+            string scene = GameManager.m_ActiveScene;
+            if (string.IsNullOrEmpty(scene) || scene == "Boot" || scene == "MainMenu" || scene == "Empty") return;
 
             var player = GameManager.GetPlayerManagerComponent();
             if (player == null) return;
