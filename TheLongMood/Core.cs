@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.2", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.3", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
