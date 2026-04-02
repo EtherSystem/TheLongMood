@@ -76,6 +76,16 @@ namespace TheLongMood
             public bool GenerateDepression;
         }
 
+        private static readonly HashSet<string> IgnoredExternalBuffTypeNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "PeaceOfMindBuff",
+            "ProtectedArmsBuff",
+            "ProtectedHandsBuff",
+            "AcclimatizedBuff",
+            "ColdResistance",
+            //"RandomOtherNameForCustomBuff", <-- FOR FUTURE NEW BUFFS
+        };
+
         public override void OnInitializeMelon()
         {
             LocalizationManager.LoadJsonLocalization(LoadEmbeddedJSON("Localization.json"));
@@ -99,6 +109,16 @@ namespace TheLongMood
                 Core.State.Depression = 0f;
                 _dirty = true;
                 if (Settings.options.IsLogging) LoggerInstance.Msg("Depression reset to 0");
+            }));
+
+            uConsole.RegisterCommand("reset_both", new Action(() =>
+            {
+                Core.State.Boredom = 0f;
+                Core.State.Depression = 0f;
+                _dirty = true;
+
+                if (Settings.options.IsLogging)
+                    LoggerInstance.Msg("Boredom and Depression reset to 0");
             }));
 
             uConsole.RegisterCommand("set_boredom", new Action(() =>
@@ -351,6 +371,22 @@ namespace TheLongMood
                 || affliction is ExtremelyBoredAffliction;
         }
 
+        private static bool IsIgnoredExternalBuffAffliction(object? affliction)
+        {
+            if (affliction == null)
+                return false;
+
+            Type type = affliction.GetType();
+
+            if (IgnoredExternalBuffTypeNames.Contains(type.Name))
+                return true;
+
+            if (!string.IsNullOrEmpty(type.FullName) && IgnoredExternalBuffTypeNames.Contains(type.FullName))
+                return true;
+
+            return false;
+        }
+
         private static bool HasOtherNonMiseryAfflictionOrRisk(Condition cond, MiseryMoodState miseryMood)
         {
             if (cond == null)
@@ -372,6 +408,9 @@ namespace TheLongMood
                     continue;
 
                 if (IsTLMAffliction(a))
+                    continue;
+
+                if (IsIgnoredExternalBuffAffliction(a))
                     continue;
 
                 activeRelevantAfflictionCount++;
