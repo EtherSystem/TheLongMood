@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.3", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.4", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -84,6 +84,14 @@ namespace TheLongMood
             "AcclimatizedBuff",
             "ColdResistance",
             //"RandomOtherNameForCustomBuff", <-- FOR FUTURE NEW BUFFS
+        };
+
+        private static readonly HashSet<string> TrackedExternalMiseryAfflictionTypeNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "OmenAffliction",
+            "DirgeAffliction",
+            "KnellAffliction",
+            "RequiemAffliction",
         };
 
         public override void OnInitializeMelon()
@@ -360,6 +368,66 @@ namespace TheLongMood
             }
         }
 
+        private static bool HasExternalAfflictionByTypeName(string afflictionTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(afflictionTypeName))
+                return false;
+
+            var mgr = AfflictionManager.GetAfflictionManagerInstance();
+            if (mgr?.m_Afflictions == null)
+                return false;
+
+            for (int i = 0; i < mgr.m_Afflictions.Count; i++)
+            {
+                var affliction = mgr.m_Afflictions[i];
+                if (affliction == null)
+                    continue;
+
+                Type type = affliction.GetType();
+
+                if (string.Equals(type.Name, afflictionTypeName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                if (!string.IsNullOrEmpty(type.FullName) &&
+                    string.Equals(type.FullName, afflictionTypeName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static void EvaluateExternalMiseryAffliction(string afflictionTypeName, int settingValue, ref MiseryMoodState state)
+        {
+            if (!TrackedExternalMiseryAfflictionTypeNames.Contains(afflictionTypeName))
+                return;
+
+            if (!HasExternalAfflictionByTypeName(afflictionTypeName))
+                return;
+
+            state.TrackedAfflictionCount++;
+            state.HasTrackedMiseryAffliction = true;
+
+            switch (GetMiseryMoodMode(settingValue))
+            {
+                case MiseryMoodMode.Boredom:
+                    state.GenerateBoredom = true;
+                    break;
+
+                case MiseryMoodMode.Depression:
+                    state.GenerateDepression = true;
+                    break;
+
+                case MiseryMoodMode.Both:
+                    state.GenerateBoredom = true;
+                    state.GenerateDepression = true;
+                    break;
+
+                case MiseryMoodMode.Nothing:
+                default:
+                    break;
+            }
+        }
+
         private static bool IsTLMAffliction(object? affliction)
         {
             return affliction is SadAffliction
@@ -429,6 +497,11 @@ namespace TheLongMood
             EvaluateMiseryAffliction(cond, AfflictionType.WeakJoints, Settings.options.RheumaticJointsMode, ref state);
             EvaluateMiseryAffliction(cond, AfflictionType.UnsettledSleep, Settings.options.HauntedMindMode, ref state);
             EvaluateMiseryAffliction(cond, AfflictionType.BrokenBody, Settings.options.BrokenBodyMode, ref state);
+
+            EvaluateExternalMiseryAffliction("OmenAffliction", Settings.options.OmenMode, ref state);
+            EvaluateExternalMiseryAffliction("DirgeAffliction", Settings.options.DirgeMode, ref state);
+            EvaluateExternalMiseryAffliction("KnellAffliction", Settings.options.KnellMode, ref state);
+            EvaluateExternalMiseryAffliction("RequiemAffliction", Settings.options.RequiemMode, ref state);
 
             return state;
         }
