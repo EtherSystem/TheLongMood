@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.4", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.5", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -59,6 +59,9 @@ namespace TheLongMood
         private bool _dirty = false;
         private bool _wasBoredomBlocked = true;
         private bool? _lastLoggedIsClearingIce = null;
+        private bool _lastLoggedTrackedMiseryBoredom = false;
+        private bool _lastLoggedTrackedMiseryDepression = false;
+        private bool _lastLoggedNonMiseryDepression = false;
 
         private enum MiseryMoodMode
         {
@@ -188,6 +191,10 @@ namespace TheLongMood
 
             _wasBoredomBlocked = true;
             _lastLoggedIsClearingIce = null;
+
+            _lastLoggedTrackedMiseryBoredom = false;
+            _lastLoggedTrackedMiseryDepression = false;
+            _lastLoggedNonMiseryDepression = false;
 
             _instantPenaltyCached = Settings.options.InstantStrugglePenalty;
             _hoursToApplyCached = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
@@ -506,6 +513,33 @@ namespace TheLongMood
             return state;
         }
 
+        private void LogMoodGenerationStateChanges(bool miseryGeneratesBoredom, bool miseryGeneratesDepression, bool nonMiseryGeneratesDepression)
+        {
+            if (!Settings.options.IsLogging)
+                return;
+
+            if (_lastLoggedTrackedMiseryBoredom != miseryGeneratesBoredom)
+            {
+                LoggerInstance.Msg(miseryGeneratesBoredom ? "Tracked Misery affliction started generating Boredom" : "Tracked Misery affliction stopped generating Boredom");
+
+                _lastLoggedTrackedMiseryBoredom = miseryGeneratesBoredom;
+            }
+
+            if (_lastLoggedTrackedMiseryDepression != miseryGeneratesDepression)
+            {
+                LoggerInstance.Msg(miseryGeneratesDepression ? "Tracked Misery affliction started generating Depression" : "Tracked Misery affliction stopped generating Depression");
+
+                _lastLoggedTrackedMiseryDepression = miseryGeneratesDepression;
+            }
+
+            if (_lastLoggedNonMiseryDepression != nonMiseryGeneratesDepression)
+            {
+                LoggerInstance.Msg(nonMiseryGeneratesDepression ? "Non-Misery affliction or risk started generating Depression" : "Non-Misery affliction or risk stopped generating Depression");
+
+                _lastLoggedNonMiseryDepression = nonMiseryGeneratesDepression;
+            }
+        }
+
         public override void OnUpdate()
         {
             LocalizationRefresh.FlushPendingRefresh();
@@ -715,6 +749,10 @@ namespace TheLongMood
             MiseryMoodState miseryMood = GetMiseryMoodState(cond);
             bool hasOtherNonMiseryAfflictionOrRisk = HasOtherNonMiseryAfflictionOrRisk(cond, miseryMood);
 
+            bool nonMiseryGeneratesDepression = hasOtherNonMiseryAfflictionOrRisk && !miseryMood.GenerateDepression;
+
+            LogMoodGenerationStateChanges(miseryMood.GenerateBoredom, miseryMood.GenerateDepression, nonMiseryGeneratesDepression);
+
             bool boredomBlocked = isActivity || holdsLightSource || isNearFire;
 
             float oldB = Core.State.Boredom;
@@ -741,9 +779,6 @@ namespace TheLongMood
             if (miseryMood.GenerateBoredom)
             {
                 Core.State.Boredom += Settings.options.DropRate * gameHoursPassed;
-
-                if (Settings.options.IsLogging)
-                    LoggerInstance.Msg("Tracked Misery affliction is generating Boredom");
             }
 
             _wasBoredomBlocked = boredomBlocked;
@@ -751,17 +786,11 @@ namespace TheLongMood
             if (miseryMood.GenerateDepression)
             {
                 Core.State.Depression += (Settings.options.DropRate * 2f) * gameHoursPassed;
-
-                if (Settings.options.IsLogging)
-                    LoggerInstance.Msg("Tracked Misery affliction is generating Depression");
             }
 
             if (hasOtherNonMiseryAfflictionOrRisk)
             {
                 Core.State.Depression += (Settings.options.DropRate * 2f) * gameHoursPassed;
-
-                if (Settings.options.IsLogging && !miseryMood.GenerateDepression)
-                    LoggerInstance.Msg("Non-Misery affliction or risk is generating Depression");
             }
             else if (!miseryMood.GenerateDepression)
             {
