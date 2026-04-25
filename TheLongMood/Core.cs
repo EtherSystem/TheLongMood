@@ -81,11 +81,23 @@ namespace TheLongMood
 
         private static readonly HashSet<string> IgnoredExternalBuffTypeNames = new(StringComparer.OrdinalIgnoreCase)
         {
+            // MinorMiseries
             "PeaceOfMindBuff",
             "ProtectedArmsBuff",
             "ProtectedHandsBuff",
+
+            // OxygenLevels
             "AcclimatizedBuff",
+
+            // CatchColdMod
             "ColdResistance",
+
+            // AfflictionsAndBuffs
+            "BurningHeart",
+            "Determination",
+            "FogsEmbrace",
+            "LittleHeart",
+
             //"RandomOtherNameForCustomBuff", <-- FOR FUTURE NEW BUFFS
         };
 
@@ -489,6 +501,13 @@ namespace TheLongMood
                     continue;
 
                 activeRelevantAfflictionCount++;
+
+                if (Settings.options.IsLogging)
+                {
+                    Type type = a.GetType();
+
+                    MelonLogger.Msg($"Non-Misery counted affliction -> TypeName:'{type.Name}' | FullName:'{type.FullName}'");
+                }
             }
 
             return activeRelevantAfflictionCount > miseryMood.TrackedAfflictionCount;
