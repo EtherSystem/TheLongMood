@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.6", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.7", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -501,13 +501,6 @@ namespace TheLongMood
                     continue;
 
                 activeRelevantAfflictionCount++;
-
-                if (Settings.options.IsLogging)
-                {
-                    Type type = a.GetType();
-
-                    MelonLogger.Msg($"Non-Misery counted affliction -> TypeName:'{type.Name}' | FullName:'{type.FullName}'");
-                }
             }
 
             return activeRelevantAfflictionCount > miseryMood.TrackedAfflictionCount;
