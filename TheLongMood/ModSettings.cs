@@ -6,18 +6,23 @@
 
         [Name("Rate")]
         [Description("Default: 10 - Overall speed of Boredom & Depression changes.")]
-        [Slider(5f, 15f, 3, NumberFormat = "{0} / hour")]
+        [Slider(0f, 15f, 4, NumberFormat = "{0} / hour")]
         public int DropRate = 10;
 
         [Name("Recovery")]
         [Description("Default: 10 - How fast Boredom decreases while you're active.")]
-        [Slider(5f, 15f, 3, NumberFormat = "{0} / hour")]
+        [Slider(0f, 15f, 4, NumberFormat = "{0} / hour")]
         public int RegenRate = 10;
 
         [Name("Boredom Delay")]
         [Description("Default: 10 - Time before Boredom starts increasing while inactive.")]
         [Slider(1, 60, 60, NumberFormat = "{0}min")]
         public int TimeForBoredomIncrease = 10;
+
+        [Name("Affliction depression rate")]
+        [Description("Default: 20 - Depression increase per hour while an affliction or risk generates depression. Set to 0 to disable this source.")]
+        [Slider(0, 60, 61, NumberFormat = "{0} / hour")]
+        public int AfflictionDepressionRate = 20;
 
         [Section("Fishing Settings")]
 

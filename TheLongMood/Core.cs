@@ -11,7 +11,7 @@ using static TheLongMood.Afflictions.Depression.Miserable;
 using static TheLongMood.Afflictions.Depression.Sad;
 using static TheLongMood.Afflictions.Depression.Weepy;
 
-[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.9", "EtherSystem, Flower Field", null)]
+[assembly: MelonInfo(typeof(TheLongMood.Core), "TheLongMood", "1.3.10", "EtherSystem, Flower Field", null)]
 [assembly: MelonGame("Hinterland", "TheLongDark")]
 
 namespace TheLongMood
@@ -91,6 +91,7 @@ namespace TheLongMood
             "ScarredFleshAffliction",
             "SevereWristSprainRiskAffliction",
             "SevereAnkleSprainRiskAffliction",
+            "AuroraExposureRiskAffliction",
 
             // OxygenLevels
             "CriticalAcclimatizedBuff",
@@ -105,6 +106,10 @@ namespace TheLongMood
             "FogsEmbrace",
             "LittleHeart",
             "LunarSyndrome",
+
+            // STALKER aids & supplements
+            "AddictionRisk",
+            "CigaretteBuff",
 
             //"RandomOtherNameForCustomBuff", <-- FOR FUTURE NEW BUFFS
         };
@@ -767,11 +772,12 @@ namespace TheLongMood
             // --------------------------
 
             MiseryMoodState miseryMood = GetMiseryMoodState(cond);
+            bool hasCigaretteBuff = HasExternalAfflictionByTypeName("CigaretteBuff");
             bool hasOtherNonMiseryAfflictionOrRisk = HasOtherNonMiseryAfflictionOrRisk(cond, miseryMood);
 
             bool nonMiseryGeneratesDepression = hasOtherNonMiseryAfflictionOrRisk && !miseryMood.GenerateDepression;
 
-            LogMoodGenerationStateChanges(miseryMood.GenerateBoredom, miseryMood.GenerateDepression, nonMiseryGeneratesDepression);
+            LogMoodGenerationStateChanges(miseryMood.GenerateBoredom, !hasCigaretteBuff && miseryMood.GenerateDepression, !hasCigaretteBuff && nonMiseryGeneratesDepression);
 
             bool boredomBlocked = isActivity || holdsLightSource || isNearFire;
 
@@ -803,37 +809,44 @@ namespace TheLongMood
 
             _wasBoredomBlocked = boredomBlocked;
 
-            if (miseryMood.GenerateDepression)
+            if (hasCigaretteBuff)
             {
-                Core.State.Depression += (Settings.options.DropRate * 2f) * gameHoursPassed;
+                Core.State.Depression -= Settings.options.DropRate * gameHoursPassed;
             }
+            else
+            {
+                if (miseryMood.GenerateDepression)
+                {
+                    Core.State.Depression += Settings.options.AfflictionDepressionRate * gameHoursPassed;
+                }
 
-            if (hasOtherNonMiseryAfflictionOrRisk)
-            {
-                Core.State.Depression += (Settings.options.DropRate * 2f) * gameHoursPassed;
-            }
-            else if (!miseryMood.GenerateDepression)
-            {
-                if (isReading)
+                if (hasOtherNonMiseryAfflictionOrRisk)
                 {
-                    Core.State.Depression -= (Settings.options.DropRate * 1f) * gameHoursPassed;
+                    Core.State.Depression += Settings.options.AfflictionDepressionRate * gameHoursPassed;
                 }
-                else if (Core.State.Boredom >= 90f)
+                else if (!miseryMood.GenerateDepression)
                 {
-                    Core.State.Depression += (Settings.options.DropRate * 2.96f) * gameHoursPassed;
-                }
-                else if (Core.State.Boredom >= 75f)
-                {
-                    Core.State.Depression += (Settings.options.DropRate * 2.22f) * gameHoursPassed;
-                }
-                else if (Core.State.Boredom >= 50f)
-                {
-                    Core.State.Depression += (Settings.options.DropRate * 1.48f) * gameHoursPassed;
-                }
-                else
-                {
-                    if (!aftershockActive)
-                        Core.State.Depression -= (Settings.options.DropRate * 0.5f) * gameHoursPassed;
+                    if (isReading)
+                    {
+                        Core.State.Depression -= Settings.options.DropRate * gameHoursPassed;
+                    }
+                    else if (Core.State.Boredom >= 90f)
+                    {
+                        Core.State.Depression += (Settings.options.DropRate * 2.96f) * gameHoursPassed;
+                    }
+                    else if (Core.State.Boredom >= 75f)
+                    {
+                        Core.State.Depression += (Settings.options.DropRate * 2.22f) * gameHoursPassed;
+                    }
+                    else if (Core.State.Boredom >= 50f)
+                    {
+                        Core.State.Depression += (Settings.options.DropRate * 1.48f) * gameHoursPassed;
+                    }
+                    else
+                    {
+                        if (!aftershockActive)
+                            Core.State.Depression -= (Settings.options.DropRate * 0.5f) * gameHoursPassed;
+                    }
                 }
             }
 
@@ -852,7 +865,7 @@ namespace TheLongMood
             _wasEating = isEating;
 
             // apply attack aftershock over time (only if not instant)
-            if (Settings.options.IsAttackAftershock && !Settings.options.InstantStrugglePenalty && Core.State.AftershockPool > 0f)
+            if (!hasCigaretteBuff && Settings.options.IsAttackAftershock && !Settings.options.InstantStrugglePenalty && Core.State.AftershockPool > 0f)
             {
                 if (Core.State.AftershockRemainingHours <= 0f)
                     Core.State.AftershockRemainingHours = Mathf.Max(MIN_HOURS_TO_APPLY, Settings.options.HoursToApply);
