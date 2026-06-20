@@ -8,6 +8,26 @@ namespace TheLongMood.Afflictions.Patches.Effects
 {
     internal class Patches
     {
+        private static float GetCraftingDurationMultiplier()
+        {
+            if (HopelessAffliction.IsActive) return 1.265f;
+            if (MiserableAffliction.IsActive) return 1.196f;
+            if (WeepyAffliction.IsActive) return 1.137f;
+            if (SadAffliction.IsActive) return 1.074f;
+
+            return 1f;
+        }
+
+        private static void ScaleCraftingProgressHours(ref float hoursSpentCrafting)
+        {
+            if (hoursSpentCrafting <= 0f) return;
+
+            float multiplier = GetCraftingDurationMultiplier();
+            if (multiplier <= 0f || Mathf.Approximately(multiplier, 1f)) return;
+
+            hoursSpentCrafting /= multiplier;
+        }
+
         [HarmonyPatch(typeof(Panel_BreakDown), nameof(Panel_BreakDown.UpdateDurationLabel))]
         [HarmonyPriority(99999)]
         public class Panel_BreakDown_UpdateDurationLabel
@@ -76,7 +96,7 @@ namespace TheLongMood.Afflictions.Patches.Effects
             }
         }
 
-            [HarmonyPatch(typeof(Panel_Repair), nameof(Panel_Repair.GetModifiedRepairDuration))]
+        [HarmonyPatch(typeof(Panel_Repair), nameof(Panel_Repair.GetModifiedRepairDuration))]
         [HarmonyPriority(99999)]
         internal static class RepairDurationPatch
         {
@@ -95,10 +115,30 @@ namespace TheLongMood.Afflictions.Patches.Effects
         {
             private static void Postfix(ref int __result)
             {
-                if (HopelessAffliction.IsActive) __result = Mathf.RoundToInt(__result * 1.265f);
-                else if (MiserableAffliction.IsActive) __result = Mathf.RoundToInt(__result * 1.196f);
-                else if (WeepyAffliction.IsActive) __result = Mathf.RoundToInt(__result * 1.137f);
-                else if (SadAffliction.IsActive) __result = Mathf.RoundToInt(__result * 1.074f);
+                float multiplier = GetCraftingDurationMultiplier();
+                if (Mathf.Approximately(multiplier, 1f)) return;
+
+                __result = Mathf.RoundToInt(__result * multiplier);
+            }
+        }
+
+        [HarmonyPatch(typeof(Il2CppTLD.Gear.CraftingOperation), nameof(Il2CppTLD.Gear.CraftingOperation.ApplyCraftingProgress))]
+        [HarmonyPriority(99999)]
+        private static class CraftingOperationApplyProgressPatch
+        {
+            private static void Prefix(ref float hoursSpentCrafting)
+            {
+                ScaleCraftingProgressHours(ref hoursSpentCrafting);
+            }
+        }
+
+        [HarmonyPatch(typeof(Il2CppTLD.Gear.CraftingOperation), nameof(Il2CppTLD.Gear.CraftingOperation.ConsumeMaterialsUsedForCrafting))]
+        [HarmonyPriority(99999)]
+        private static class CraftingOperationConsumeMaterialsPatch
+        {
+            private static void Prefix(ref float hoursSpentCrafting)
+            {
+                ScaleCraftingProgressHours(ref hoursSpentCrafting);
             }
         }
 
