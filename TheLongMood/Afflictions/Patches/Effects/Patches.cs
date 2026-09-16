@@ -8,6 +8,8 @@ namespace TheLongMood.Afflictions.Patches.Effects
 {
     internal class Patches
     {
+        private static int _cookingRecipePreparationDepth;
+
         private static float GetCraftingDurationMultiplier()
         {
             if (HopelessAffliction.IsActive) return 1.265f;
@@ -119,6 +121,37 @@ namespace TheLongMood.Afflictions.Patches.Effects
                 if (Mathf.Approximately(multiplier, 1f)) return;
 
                 __result = Mathf.RoundToInt(__result * multiplier);
+            }
+        }
+
+        [HarmonyPatch(typeof(Panel_Cooking), nameof(Panel_Cooking.OnCookRecipe))]
+        [HarmonyPriority(99999)]
+        private static class CookingRecipePreparationScopePatch
+        {
+            private static void Prefix()
+            {
+                _cookingRecipePreparationDepth++;
+            }
+
+            private static Exception Finalizer(Exception __exception)
+            {
+                if (_cookingRecipePreparationDepth > 0) _cookingRecipePreparationDepth--;
+                return __exception;
+            }
+        }
+
+        [HarmonyPatch(typeof(Il2CppTLD.Gear.CraftingOperation), nameof(Il2CppTLD.Gear.CraftingOperation.StartCrafting))]
+        [HarmonyPriority(99999)]
+        private static class CookingRecipePreparationDurationPatch
+        {
+            private static void Prefix(ref float hoursToSpendCrafting)
+            {
+                if (_cookingRecipePreparationDepth <= 0 || hoursToSpendCrafting <= 0f) return;
+
+                float multiplier = GetCraftingDurationMultiplier();
+                if (multiplier <= 0f || Mathf.Approximately(multiplier, 1f)) return;
+
+                hoursToSpendCrafting *= multiplier;
             }
         }
 
